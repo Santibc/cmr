@@ -67,6 +67,25 @@
                                 <small class="text-danger">{{ $message }}</small>
                             @enderror
                         </div>
+
+                        {{-- Rol --}}
+                        <div class="col-12 col-md-6 mb-3">
+                            <label class="form-label">
+                                Rol <span class="text-danger">*</span>
+                            </label>
+                            <select name="role" class="form-control">
+                                <option value="">Selecciona un rol</option>
+                                @foreach(\Spatie\Permission\Models\Role::all() as $role)
+                                    <option value="{{ $role->name }}" 
+                                        {{ old('role', $user->roles->first()?->name) == $role->name ? 'selected' : '' }}>
+                                        {{ ucfirst($role->name) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('role')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
                     </div>
 
                     {{-- Campos adicionales --}}

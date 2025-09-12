@@ -6,6 +6,10 @@ use App\Http\Controllers\UsuariosController;
 use App\Http\Controllers\LeadsController;
 use App\Http\Controllers\LlamadasController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\OnboardingLeadsController;
+use App\Http\Controllers\OnboardingCallsController;
+use App\Http\Controllers\LeadNotesController;
+use App\Http\Controllers\OnboardingDashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,6 +50,24 @@ Route::get('sales/form/{lead}', [SalesController::class, 'form'])->name('sales.f
         Route::post('store', [SalesController::class, 'store'])->name('store');
     });
         Route::post('leads/{id}/update-status', [LeadsController::class, 'updatePipelineStatus'])->name('leads.update_status');
+
+    // Rutas de Onboarding para rol CMS
+    Route::prefix('onboarding')->name('onboarding.')->group(function () {
+        Route::get('dashboard', [OnboardingDashboardController::class, 'index'])->name('dashboard');
+        Route::get('leads', [OnboardingLeadsController::class, 'index'])->name('leads');
+        Route::get('leads/{leadId}/calls', [OnboardingCallsController::class, 'getLeadCalls'])->name('leads.calls');
+        Route::post('calls', [OnboardingCallsController::class, 'store'])->name('calls.store');
+        Route::put('calls/{callId}/status', [OnboardingCallsController::class, 'updateStatus'])->name('calls.update_status');
+        Route::put('calls/{callId}/reschedule', [OnboardingCallsController::class, 'reschedule'])->name('calls.reschedule');
+        Route::get('calls/{callId}/logs', [OnboardingCallsController::class, 'getLogs'])->name('calls.logs');
+    });
+
+    // Rutas para gestión de notas de leads
+    Route::prefix('lead-notes')->name('lead-notes.')->group(function () {
+        Route::post('/', [LeadNotesController::class, 'store'])->name('store');
+        Route::get('/{leadId}', [LeadNotesController::class, 'getLeadNotes'])->name('get');
+        Route::delete('/{noteId}', [LeadNotesController::class, 'destroy'])->name('destroy');
+    });
 
 });
 

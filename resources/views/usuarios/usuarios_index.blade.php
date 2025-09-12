@@ -21,6 +21,7 @@
                                     <th class="px-6 py-3">Avatar</th>
                                     <th class="px-6 py-3">UUID</th>
                                     <th class="px-6 py-3">Slug</th>
+                                    <th class="px-6 py-3">Rol</th>
                                     <th class="px-6 py-3">Calendly URL</th>
                                     <th class="px-6 py-3">Calendly URI</th>
                                     <th class="px-6 py-3">Zona Horaria</th>
@@ -67,6 +68,15 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             { data: 'uuid', name: 'uuid' },
             { data: 'slug', name: 'slug' },
+            { 
+                data: 'roles', 
+                name: 'roles',
+                render: function (data) {
+                    return data && data.length > 0 ? data[0].name : '';
+                },
+                orderable: false,
+                searchable: false
+            },
             { data: 'scheduling_url', name: 'scheduling_url' },
             { data: 'calendly_uri', name: 'calendly_uri' },
             { data: 'timezone', name: 'timezone' }

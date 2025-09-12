@@ -21,18 +21,46 @@
     <span>Usuarios</span>
 </a>
 @endif
-<a href="/leads"
-   class="nav-link mb-2 d-flex align-items-center gap-2 {{ request()->is('leads*') ? 'active' : 'text-dark' }}">
-    <i class="bi bi-person-plus-fill"></i>
-    <span>Leads</span>
-</a>
+@if (auth()->user()->getRoleNames()->first() == 'admin' || auth()->user()->getRoleNames()->first() == 'closer')
+    <a href="/leads"
+    class="nav-link mb-2 d-flex align-items-center gap-2 {{ request()->is('leads*') && !request()->is('onboarding/leads*') ? 'active' : 'text-dark' }}">
+        <i class="bi bi-person-plus-fill"></i>
+        <span>Leads</span>
+    </a>
 
-<a href="/llamadas"
-   class="nav-link mb-2 d-flex align-items-center gap-2 {{ request()->is('llamadas*') ? 'active' : 'text-dark' }}">
-    <i class="bi bi-telephone-fill"></i>
-    <span>Llamadas</span>
-</a>
+    <a href="/llamadas"
+    class="nav-link mb-2 d-flex align-items-center gap-2 {{ request()->is('llamadas*') ? 'active' : 'text-dark' }}">
+        <i class="bi bi-telephone-fill"></i>
+        <span>Llamadas</span>
+    </a>
+@endif
 
+@if (auth()->user()->getRoleNames()->first() == 'admin' || auth()->user()->getRoleNames()->first() == 'cms')
+    <!-- Onboarding Dropdown -->
+    <div class="nav-item dropdown mb-2">
+        <a class="nav-link d-flex align-items-center gap-2 dropdown-toggle {{ request()->is('onboarding*') ? 'active' : 'text-dark' }}" 
+           href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-headset"></i>
+            <span>Onboarding</span>
+        </a>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 {{ request()->is('onboarding/dashboard*') ? 'active' : '' }}" 
+                   href="/onboarding/dashboard">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 {{ request()->is('onboarding/leads*') ? 'active' : '' }}" 
+                   href="/onboarding/leads">
+                    <i class="bi bi-people"></i>
+                    <span>Gestión de Leads</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+@endif
 
         {{-- Agrega más enlaces aquí si lo deseas --}}
     </nav>

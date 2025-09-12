@@ -44,4 +44,12 @@ public function logs()
 {
     return $this->hasMany(Log::class, 'id_tabla')->where('tabla', 'leads')->latest();
 }
+public function onboardingCalls()
+{
+    return $this->hasMany(OnboardingCall::class);
+}
+public function notes()
+{
+    return $this->hasMany(LeadNote::class)->latest();
+}
 }

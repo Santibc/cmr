@@ -29,7 +29,7 @@ class UsuariosController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $users = User::query()->where('id', '!=', 1);
+            $users = User::with('roles')->where('id', '!=', 1);
 
             return DataTables::of($users)
                 ->addColumn('action', function ($user) {
@@ -80,6 +80,7 @@ class UsuariosController extends Controller
                 Rule::unique('users')->ignore($user?->id)
             ],
             'password' => $user ? ['nullable', 'string', 'min:6'] : ['required', 'string', 'min:6'],
+            'role' => ['required', 'string', 'exists:roles,name'],
             'uuid' => ['nullable', 'string'],
             'locale' => ['nullable', 'string', 'max:10'],
             'time_notation' => ['nullable', 'string', 'max:10'],
@@ -95,15 +96,24 @@ class UsuariosController extends Controller
             'max' => 'No debe superar los :max caracteres.',
             'unique' => 'Ya existe un usuario con este correo.',
             'min' => 'Debe tener al menos :min caracteres.',
+            'exists' => 'El rol seleccionado no es válido.',
         ];
 
         $validated = $request->validate($rules, $messages);
 
+        // Extraer el rol para manejar por separado
+        $role = $validated['role'];
+        unset($validated['role']);
+
         if ($user) {
-              unset($validated['email']);
+            unset($validated['email']);
             $this->userService->update($user, $validated);
+            // Asignar el rol al usuario existente
+            $user->syncRoles([$role]);
         } else {
-            $this->userService->create($validated);
+            $newUser = $this->userService->create($validated);
+            // Asignar el rol al nuevo usuario
+            $newUser->assignRole($role);
         }
 
         return redirect()->route('usuarios')->with('success', 'Usuario guardado correctamente.');

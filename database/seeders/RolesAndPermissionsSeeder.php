@@ -24,13 +24,15 @@ class RolesAndPermissionsSeeder extends Seeder
 
         
                 // Crea roles
-             /*    $adminRole = Role::create(['name' => 'admin']); */
-/*                 $editorRole = Role::create(['name' => 'editor']);
-                $userRole = Role::create(['name' => 'user']); // Rol por defecto para usuarios registrados */
+                Role::firstOrCreate(['name' => 'admin']);
+                Role::firstOrCreate(['name' => 'closer']);
+                Role::firstOrCreate(['name' => 'cms']);
         
                 // Asigna permisos a los roles (ejemplo)
-                $adminRole = Role::where('id', 1)->first();
-                $adminRole->givePermissionTo(['Mensaje inicio']);
+                $adminRole = Role::where('name', 'admin')->first();
+                if ($adminRole) {
+                    $adminRole->givePermissionTo(['Mensaje inicio']);
+                }
                 // $editorRole->givePermissionTo(['edit articles', 'publish articles']);
     }
 }
