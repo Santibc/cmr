@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acuerdo de Formación</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            line-height: 1.4;
+            margin: 40px;
+            color: #000;
+            font-size: 12pt;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 16pt;
+            margin: 0;
+            font-weight: bold;
+        }
+        .content {
+            text-align: justify;
+            margin-bottom: 20px;
+        }
+        .signature-section {
+            margin-top: 40px;
+            page-break-inside: avoid;
+        }
+        .signature-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 60px;
+            align-items: flex-end;
+        }
+        .signature-box {
+            text-align: center;
+            width: 200px;
+        }
+        .signature-line {
+            border-bottom: 1px solid #000;
+            height: 60px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 5px;
+        }
+        .signature-image {
+            max-width: 180px;
+            max-height: 50px;
+        }
+        .field {
+            display: inline;
+            border-bottom: 1px solid #000;
+            min-width: 150px;
+            padding: 0 5px;
+        }
+        .date-section {
+            margin-top: 30px;
+            text-align: left;
+        }
+        p {
+            margin: 10px 0;
+        }
+        .payment-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ACUERDO DE FORMACIÓN</h1>
+    </div>
+
+    <div class="content">
+        <p>
+            Entre la empresa <strong>PROFESIONAL TRADING S.A.S</strong>, con NIT 901.666.139-6, domiciliada en la ciudad de Bogotá D.C.,
+            representada legalmente por <strong>KEVIN CAMILO GARAVITO LEGUIZAMON</strong>, identificado con cédula de ciudadanía
+            número 1.018.506.399, quien en adelante se denominará <strong>"LA EMPRESA"</strong>, y el señor(a)
+            <span class="field">{nombre}</span>, identificado(a) con cédula de ciudadanía número
+            <span class="field">{dni}</span>, quien en adelante se denominará <strong>"EL ESTUDIANTE"</strong>,
+            acuerdan celebrar el presente contrato de formación, que se regirá por las siguientes cláusulas:
+        </p>
+
+        <p>
+            <strong>PRIMERA.- OBJETO:</strong> LA EMPRESA se compromete a brindar al ESTUDIANTE formación especializada
+            en trading y mercados financieros, incluyendo acceso a plataformas educativas, material didáctico,
+            mentoría personalizada y acompañamiento en el proceso de aprendizaje.
+        </p>
+
+        <p>
+            <strong>SEGUNDA.- OBLIGACIONES DE LA EMPRESA:</strong> LA EMPRESA se compromete a:
+        </p>
+        <ul>
+            <li>Proporcionar acceso completo a la plataforma educativa</li>
+            <li>Brindar material didáctico actualizado y de calidad</li>
+            <li>Ofrecer mentoría personalizada según el plan contratado</li>
+            <li>Dar soporte técnico durante el proceso de formación</li>
+            <li>Expedir certificación al completar satisfactoriamente el programa</li>
+        </ul>
+
+        <p>
+            <strong>TERCERA.- OBLIGACIONES DEL ESTUDIANTE:</strong> EL ESTUDIANTE se compromete a:
+        </p>
+        <ul>
+            <li>Participar activamente en las sesiones de formación</li>
+            <li>Cumplir con las actividades y evaluaciones propuestas</li>
+            <li>Mantener confidencialidad sobre las estrategias enseñadas</li>
+            <li>Realizar los pagos en las fechas establecidas</li>
+        </ul>
+
+        <div class="payment-section">
+            <p><strong>CUARTA.- FORMA DE PAGO:</strong></p>
+            <p>{forma_de_pago}</p>
+        </div>
+
+        <p>
+            <strong>QUINTA.- DURACIÓN:</strong> El presente acuerdo tendrá una duración de acuerdo al plan seleccionado
+            y las condiciones específicas acordadas entre las partes.
+        </p>
+
+        <p>
+            <strong>SEXTA.- TERMINACIÓN:</strong> Este acuerdo podrá terminar por mutuo acuerdo entre las partes,
+            por incumplimiento de alguna de las obligaciones establecidas, o por finalización del período de formación.
+        </p>
+
+        <p>
+            <strong>SÉPTIMA.- ACEPTACIÓN:</strong> Las partes manifiestan que han leído y comprendido el presente acuerdo,
+            y lo aceptan en todas sus partes.
+        </p>
+    </div>
+
+    <div class="date-section">
+        <p>Bogotá D.C., <span id="current-date"></span></p>
+    </div>
+
+    <div class="signature-section">
+        <div class="signature-row">
+            <div class="signature-box">
+                <div class="signature-line">
+                    {imagen_firma}
+                </div>
+                <p><strong>EL ESTUDIANTE</strong></p>
+                <p>Nombre: {nombre}</p>
+                <p>C.C.: {dni}</p>
+                <p>Aclaración: {aclaracion}</p>
+            </div>
+
+            <div class="signature-box">
+                <div class="signature-line">
+                    <strong>KEVIN CAMILO GARAVITO</strong>
+                </div>
+                <p><strong>LA EMPRESA</strong></p>
+                <p>PROFESIONAL TRADING S.A.S</p>
+                <p>NIT: 901.666.139-6</p>
+                <p>Representante Legal</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Insertar fecha automáticamente
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const options = {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            const formattedDate = today.toLocaleDateString('es-ES', options);
+            const dateElement = document.getElementById('current-date');
+            if (dateElement) {
+                dateElement.textContent = formattedDate;
+            }
+        });
+    </script>
+</body>
+</html>

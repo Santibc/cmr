@@ -52,10 +52,17 @@
                 </a>
             </li>
             <li>
-                <a class="dropdown-item d-flex align-items-center gap-2 {{ request()->is('onboarding/leads*') ? 'active' : '' }}" 
+                <a class="dropdown-item d-flex align-items-center gap-2 {{ request()->is('onboarding/leads*') ? 'active' : '' }}"
                    href="/onboarding/leads">
                     <i class="bi bi-people"></i>
                     <span>Gestión de Leads</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 {{ request()->is('contracts/approval*') ? 'active' : '' }}"
+                   href="/contracts/approval">
+                    <i class="bi bi-file-earmark-check"></i>
+                    <span>Aprobación de Contratos</span>
                 </a>
             </li>
         </ul>

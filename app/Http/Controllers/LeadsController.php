@@ -11,6 +11,9 @@ use App\Models\User;
 use App\Models\Log;
 use App\Models\PipelineStatus;
 use App\Models\Lead;
+use App\Models\Sale;
+use App\Mail\ContractSigningMail;
+use Illuminate\Support\Facades\Mail;
 use Yajra\DataTables\Facades\DataTables;
 
 class LeadsController extends Controller
@@ -55,7 +58,7 @@ class LeadsController extends Controller
     {
         if ($request->ajax()) {
             // Construir la consulta base una sola vez
-            $query = Lead::with('pipelineStatus', 'user')->orderByDesc('id');
+            $query = Lead::with('pipelineStatus', 'user', 'sale.contractTemplate')->orderByDesc('id');
 
             // Aplicar filtro por rol al query existente
             if (auth()->user()->getRoleNames()->first() !== 'admin') {
@@ -76,7 +79,7 @@ class LeadsController extends Controller
                     
                     if ($lead->sale) {
                         // Ya tiene una venta registrada: botón para ver modal
-                        $buttons .= '<button type="button" class="btn btn-outline-primary btn-sm view-sale-btn" 
+                        $buttons .= '<button type="button" class="btn btn-outline-primary btn-sm view-sale-btn"
                             data-lead-id="' . $lead->id . '"
                             data-nombre="' . e($lead->sale->nombre_cliente) . '"
                             data-apellido="' . e($lead->sale->apellido_cliente) . '"
@@ -91,6 +94,25 @@ class LeadsController extends Controller
                             title="Ver Detalles de la Venta">
                             <i class="bi bi-eye"></i>
                         </button>';
+
+                        // Botones de contrato si existe
+                        if ($lead->sale->contractTemplate) {
+                            if ($lead->sale->contract_approved) {
+                                // Contrato aprobado: botón para descargar
+                                $buttons .= '<button type="button" class="btn btn-outline-success btn-sm download-contract-btn"
+                                    data-sale-id="' . $lead->sale->id . '"
+                                    title="Descargar Contrato Aprobado">
+                                    <i class="bi bi-download"></i>
+                                </button>';
+                            } else {
+                                // Contrato no aprobado: botón para reenviar email
+                                $buttons .= '<button type="button" class="btn btn-outline-warning btn-sm resend-contract-btn"
+                                    data-sale-id="' . $lead->sale->id . '"
+                                    title="Reenviar Email de Contrato">
+                                    <i class="bi bi-envelope"></i>
+                                </button>';
+                            }
+                        }
                     } elseif ($lead->pipelineStatus && $lead->pipelineStatus->name == 'Cerrada/Venta hecha') {
                         // Si no tiene venta pero está en estado de cierre: botón para registrar
                         $buttons .= '<a href="' . route('sales.form', $lead->id) . '" class="btn btn-outline-success btn-sm" title="Registrar Venta"><i class="bi bi-file-earmark-text"></i></a>';
@@ -176,5 +198,80 @@ class LeadsController extends Controller
                 'fecha' => $log->created_at->format('Y-m-d H:i'),
             ];
         }));
+    }
+
+    public function downloadContract($saleId)
+    {
+        $sale = Sale::with('contractTemplate')->findOrFail($saleId);
+
+        if (!$sale->contract_approved) {
+            return back()->with('error', 'El contrato no ha sido aprobado aún.');
+        }
+
+        // Generar HTML del contrato
+        $contractHtml = $this->generateContractHtml($sale, $sale->contractTemplate);
+
+        // Crear PDF usando DomPDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($contractHtml);
+
+        return $pdf->download('contrato_' . $sale->id . '.pdf');
+    }
+
+    public function resendContractEmail($saleId)
+    {
+        $sale = Sale::with(['contractTemplate', 'lead'])->findOrFail($saleId);
+
+        if (!$sale->contractTemplate) {
+            return response()->json(['success' => false, 'message' => 'No hay contrato asociado.']);
+        }
+
+        try {
+            Mail::to($sale->email_cliente)->send(new ContractSigningMail($sale));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email de contrato reenviado exitosamente.',
+                'contract_url' => route('contract.sign', $sale->contract_token)
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error reenviando email de contrato: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al enviar el email. Inténtalo de nuevo.'
+            ]);
+        }
+    }
+
+    private function generateContractHtml($sale, $contractTemplate)
+    {
+        $html = $contractTemplate->html_content;
+        $contractData = $sale->contract_data ?? [];
+
+        // Usar solo los datos del contrato tal como están
+        foreach ($contractData as $key => $value) {
+            if ($key === 'imagen_firma' && $value) {
+                // Para PDF, convertir URL a ruta absoluta del archivo
+                $imagePath = $value;
+                if (strpos($value, 'http') === 0) {
+                    // Es una URL completa, extraer solo la parte del archivo
+                    $imagePath = str_replace(asset(''), '', $value);
+                }
+
+                // Construir ruta absoluta para DomPDF
+                $absolutePath = public_path($imagePath);
+
+                if (file_exists($absolutePath)) {
+                    $html = str_replace('{' . $key . '}', '<img src="' . $absolutePath . '" class="signature-image">', $html);
+                } else {
+                    // Si no existe el archivo, usar la URL original
+                    $html = str_replace('{' . $key . '}', '<img src="' . $value . '" class="signature-image">', $html);
+                }
+            } else {
+                $html = str_replace('{' . $key . '}', $value ?? '', $html);
+            }
+        }
+
+        return $html;
     }
 }

@@ -203,6 +203,34 @@
         </div>
     </div>
 
+    <!-- Modal para historial de cambios de pipeline -->
+    <div class="modal fade" id="logsModal" tabindex="-1" aria-labelledby="logsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Historial de Cambios de Estado</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Estado anterior</th>
+                                <th>Estado nuevo</th>
+                                <th>Comentario</th>
+                                <th>Usuario</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logsTableBody">
+                            <tr><td colspan="5" class="text-center">Cargando...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @push('scripts')
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -735,6 +763,43 @@
                     button.prop('disabled', false);
                     button.html(originalText);
                 }
+            });
+        });
+
+        // Manejar descarga de contratos
+        $(document).on('click', '.download-contract-btn', function() {
+            const saleId = $(this).data('sale-id');
+            window.open(`{{ route('onboarding.contracts.download', ':id') }}`.replace(':id', saleId), '_blank');
+        });
+
+        // Ver historial de cambios de pipeline
+        $(document).on('click', '.view-logs-btn', function () {
+            const leadId = $(this).data('lead-id');
+            $('#logsModal').modal('show');
+            $('#logsTableBody').html('<tr><td colspan="5" class="text-center">Cargando...</td></tr>');
+
+            $.get(`{{ url('/onboarding/leads') }}/${leadId}/logs`, function (data) {
+                if (data.length === 0) {
+                    $('#logsTableBody').html('<tr><td colspan="5" class="text-center">Sin registros</td></tr>');
+                    return;
+                }
+
+                let rows = '';
+                data.forEach(log => {
+                    rows += `
+                        <tr>
+                            <td>${log.estado_anterior}</td>
+                            <td>${log.estado_nuevo}</td>
+                            <td>${log.comentario}</td>
+                            <td>${log.usuario}</td>
+                            <td>${log.fecha}</td>
+                        </tr>
+                    `;
+                });
+
+                $('#logsTableBody').html(rows);
+            }).fail(() => {
+                $('#logsTableBody').html('<tr><td colspan="5" class="text-danger text-center">Error al cargar los logs.</td></tr>');
             });
         });
     });

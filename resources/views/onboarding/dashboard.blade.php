@@ -1,8 +1,7 @@
-@extends('layouts.app')
-
-@section('title', 'Dashboard Onboarding')
-
-@section('content')
+<x-app-layout>
+    <x-slot name="header">
+        Dashboard Onboarding
+    </x-slot>
 <div class="container-fluid">
     <!-- Header con filtros de fecha -->
     <div class="row mb-4">
@@ -640,4 +639,5 @@ document.addEventListener('DOMContentLoaded', function() {
     height: 0.5rem;
 }
 </style>
-@endsection
+
+</x-app-layout>

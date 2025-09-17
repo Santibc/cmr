@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Lead;
 use App\Models\OnboardingCall;
+use App\Models\Sale;
+use App\Models\Log;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -27,11 +29,14 @@ class OnboardingLeadsController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            // Solo leads que tienen una venta registrada (sale)
-            $query = Lead::with(['sale', 'onboardingCalls' => function($query) {
+            // Solo leads que tienen una venta registrada con contrato aprobado
+            $query = Lead::with(['sale.contractTemplate', 'onboardingCalls' => function($query) {
                 $query->latest();
             }])
-            ->whereHas('sale') // Solo leads con ventas
+            ->whereHas('sale', function($query) {
+                $query->whereNotNull('contract_template_id')
+                      ->where('contract_approved', true);
+            })
             ->orderByDesc('id');
 
             return DataTables::of($query)
@@ -74,14 +79,30 @@ class OnboardingLeadsController extends Controller
                     </button>';
                     
                     // Botón para gestionar notas del lead
-                    $buttons .= '<button type="button" class="btn btn-outline-warning btn-sm manage-notes-btn" 
-                        data-lead-id="' . $lead->id . '" 
+                    $buttons .= '<button type="button" class="btn btn-outline-warning btn-sm manage-notes-btn"
+                        data-lead-id="' . $lead->id . '"
                         data-lead-name="' . e($lead->nombre) . '"
                         data-lead-email="' . e($lead->email) . '"
                         title="Gestionar Notas del Lead">
                         <i class="bi bi-sticky"></i>
                     </button>';
-                    
+
+                    // Botón para descargar contrato (solo si existe y está aprobado)
+                    if ($lead->sale && $lead->sale->contract_approved && $lead->sale->contractTemplate) {
+                        $buttons .= '<button type="button" class="btn btn-outline-success btn-sm download-contract-btn"
+                            data-sale-id="' . $lead->sale->id . '"
+                            title="Descargar Contrato Aprobado">
+                            <i class="bi bi-download"></i>
+                        </button>';
+                    }
+
+                    // Botón para ver historial de cambios
+                    $buttons .= '<button type="button" class="btn btn-outline-secondary btn-sm view-logs-btn"
+                        data-lead-id="' . $lead->id . '"
+                        title="Ver Historial de Cambios">
+                        <i class="bi bi-clock-history"></i>
+                    </button>';
+
                     $buttons .= '</div>';
                     return $buttons;
                 })
@@ -117,5 +138,69 @@ class OnboardingLeadsController extends Controller
         }
 
         return view('onboarding.leads_index');
+    }
+
+    public function downloadContract($saleId)
+    {
+        $sale = Sale::with('contractTemplate')->findOrFail($saleId);
+
+        if (!$sale->contract_approved) {
+            return back()->with('error', 'El contrato no ha sido aprobado aún.');
+        }
+
+        // Generar HTML del contrato
+        $contractHtml = $this->generateContractHtml($sale, $sale->contractTemplate);
+
+        // Crear PDF usando DomPDF
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($contractHtml);
+
+        return $pdf->download('contrato_' . $sale->id . '.pdf');
+    }
+
+    public function logs($id)
+    {
+        $lead = Lead::with(['logs.usuario'])->findOrFail($id);
+
+        return response()->json($lead->logs->map(function ($log) {
+            return [
+                'estado_anterior' => $log->valor_viejo,
+                'estado_nuevo' => $log->valor_nuevo,
+                'comentario' => $log->detalle,
+                'usuario' => $log->usuario->name ?? 'Desconocido',
+                'fecha' => $log->created_at->format('Y-m-d H:i'),
+            ];
+        }));
+    }
+
+    private function generateContractHtml($sale, $contractTemplate)
+    {
+        $html = $contractTemplate->html_content;
+        $contractData = $sale->contract_data ?? [];
+
+        // Usar solo los datos del contrato tal como están
+        foreach ($contractData as $key => $value) {
+            if ($key === 'imagen_firma' && $value) {
+                // Para PDF, convertir URL a ruta absoluta del archivo
+                $imagePath = $value;
+                if (strpos($value, 'http') === 0) {
+                    // Es una URL completa, extraer solo la parte del archivo
+                    $imagePath = str_replace(asset(''), '', $value);
+                }
+
+                // Construir ruta absoluta para DomPDF
+                $absolutePath = public_path($imagePath);
+
+                if (file_exists($absolutePath)) {
+                    $html = str_replace('{' . $key . '}', '<img src="' . $absolutePath . '" class="signature-image">', $html);
+                } else {
+                    // Si no existe el archivo, usar la URL original
+                    $html = str_replace('{' . $key . '}', '<img src="' . $value . '" class="signature-image">', $html);
+                }
+            } else {
+                $html = str_replace('{' . $key . '}', $value ?? '', $html);
+            }
+        }
+
+        return $html;
     }
 }

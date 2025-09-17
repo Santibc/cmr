@@ -293,6 +293,45 @@
                 }
             });
         });
+
+        // Manejar descarga de contratos
+        $(document).on('click', '.download-contract-btn', function() {
+            const saleId = $(this).data('sale-id');
+            window.open(`{{ route('contracts.download', ':id') }}`.replace(':id', saleId), '_blank');
+        });
+
+        // Manejar reenvío de email de contrato
+        $(document).on('click', '.resend-contract-btn', function() {
+            const saleId = $(this).data('sale-id');
+            const button = $(this);
+
+            if (confirm('¿Está seguro de que desea reenviar el email del contrato?')) {
+                button.prop('disabled', true);
+
+                $.ajax({
+                    url: `{{ route('contracts.resend', ':id') }}`.replace(':id', saleId),
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert('Email de contrato reenviado exitosamente.');
+                            // Opcional: mostrar la URL en consola para testing
+                            console.log('URL del contrato:', response.contract_url);
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        alert('Error al reenviar el email del contrato.');
+                    },
+                    complete: function() {
+                        button.prop('disabled', false);
+                    }
+                });
+            }
+        });
     });
 </script>
 @endpush

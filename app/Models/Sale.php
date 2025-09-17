@@ -23,6 +23,17 @@ class Sale extends Model
         'comprobante_pago_path',
         'tipo_acuerdo',
         'comentarios',
+        'contract_template_id',
+        'contract_approved',
+        'contract_data',
+        'contract_token',
+        'contract_signed_date',
+    ];
+
+    protected $casts = [
+        'contract_data' => 'array',
+        'contract_approved' => 'boolean',
+        'contract_signed_date' => 'datetime',
     ];
 
     // Relaciones
@@ -40,5 +51,10 @@ class Sale extends Model
     public function llamada()
     {
         return $this->belongsTo(Llamada::class);
+    }
+
+    public function contractTemplate()
+    {
+        return $this->belongsTo(ContractTemplate::class);
     }
 }

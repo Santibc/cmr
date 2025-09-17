@@ -67,6 +67,32 @@
                         </div>
                     </div>
 
+                    <!-- Sección de Contrato -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <h5 class="text-primary mb-3">Información del Contrato</h5>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Contrato <span class="text-danger">*</span></label>
+                                <select name="contract_template_id" id="contract_template_id" class="form-select" required>
+                                    <option value="">Seleccione un contrato</option>
+                                    @foreach($contractTemplates as $template)
+                                        <option value="{{ $template->id }}" {{ old('contract_template_id') == $template->id ? 'selected' : '' }}>
+                                            {{ $template->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="mb-3" id="forma_pago_container" style="display: none;">
+                                <label class="form-label">Forma de Pago (para el contrato) <span class="text-danger">*</span></label>
+                                <textarea name="forma_de_pago" class="form-control" rows="3" placeholder="Describe la forma de pago acordada...">{{ old('forma_de_pago') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="d-flex justify-content-between align-items-center mt-4">
                         <button type="submit" class="btn btn-primary">Registrar Venta</button>
                         <a href="{{ route('leads') }}" class="btn btn-outline-secondary">Cancelar</a>
@@ -75,4 +101,29 @@
             </div>
         </div>
     </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const contractSelect = document.getElementById('contract_template_id');
+        const formaPagoContainer = document.getElementById('forma_pago_container');
+
+        contractSelect.addEventListener('change', function() {
+            if (this.value) {
+                formaPagoContainer.style.display = 'block';
+                formaPagoContainer.querySelector('textarea').required = true;
+            } else {
+                formaPagoContainer.style.display = 'none';
+                formaPagoContainer.querySelector('textarea').required = false;
+            }
+        });
+
+        // Verificar estado inicial
+        if (contractSelect.value) {
+            formaPagoContainer.style.display = 'block';
+            formaPagoContainer.querySelector('textarea').required = true;
+        }
+    });
+</script>
+@endpush
 </x-app-layout>

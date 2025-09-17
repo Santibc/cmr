@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acuerdo de Formación y Anexo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .content {
+            text-align: justify;
+        }
+        .signature-section {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .signature-box {
+            width: 200px;
+            border-bottom: 1px solid #000;
+            text-align: center;
+            padding-top: 50px;
+        }
+        .field {
+            display: inline-block;
+            border-bottom: 1px solid #333;
+            min-width: 200px;
+            padding: 2px 5px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .clause {
+            margin: 20px 0;
+        }
+        .payment-method {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ACUERDO DE FORMACIÓN Y ANEXO</h1>
+        <p><strong>CONTRATO DE SERVICIOS EDUCATIVOS</strong></p>
+    </div>
+
+    <div class="content">
+        <div class="clause">
+            <p><strong>PRIMERA. - IDENTIFICACIÓN DE LAS PARTES:</strong></p>
+            <p>Entre <strong>{nombre_completo}</strong>, mayor de edad, identificado con cédula de ciudadanía número <strong>{identificacion_personal}</strong>, con domicilio en <strong>{domicilio}</strong>, quien en adelante se denominará <strong>EL ESTUDIANTE</strong>, y la entidad educativa, quien en adelante se denominará <strong>LA INSTITUCIÓN</strong>.</p>
+        </div>
+
+        <div class="clause">
+            <p><strong>SEGUNDA. - OBJETO DEL CONTRATO:</strong></p>
+            <p>LA INSTITUCIÓN se compromete a brindar servicios educativos de formación profesional al ESTUDIANTE, incluyendo acceso a plataformas digitales, material didáctico, y acompañamiento académico personalizado.</p>
+        </div>
+
+        <div class="clause">
+            <p><strong>TERCERA. - DATOS DE CONTACTO:</strong></p>
+            <p>Email del estudiante: <strong>{email_cliente}</strong></p>
+            <p>Teléfono: <strong>{telefono_cliente}</strong></p>
+        </div>
+
+        <div class="clause">
+            <p><strong>CUARTA. - FORMA DE PAGO:</strong></p>
+            <div class="payment-method">
+                <p><strong>Método de pago acordado:</strong> {forma_de_pago}</p>
+            </div>
+        </div>
+
+        <div class="clause">
+            <p><strong>QUINTA. - TIPO DE ACUERDO:</strong></p>
+            <p>El presente acuerdo corresponde a: <strong>{tipo_acuerdo}</strong></p>
+        </div>
+
+        <div class="clause">
+            <p><strong>SEXTA. - COMPROMISOS DEL ESTUDIANTE:</strong></p>
+            <ul>
+                <li>Cumplir con los horarios establecidos para las sesiones de formación</li>
+                <li>Realizar las actividades y evaluaciones propuestas</li>
+                <li>Mantener una actitud respetuosa durante el proceso formativo</li>
+                <li>Efectuar los pagos en las fechas acordadas</li>
+            </ul>
+        </div>
+
+        <div class="clause">
+            <p><strong>SÉPTIMA. - COMPROMISOS DE LA INSTITUCIÓN:</strong></p>
+            <ul>
+                <li>Proporcionar material didáctico actualizado</li>
+                <li>Brindar acompañamiento académico personalizado</li>
+                <li>Garantizar acceso a las plataformas educativas</li>
+                <li>Expedir certificación una vez completado el programa</li>
+            </ul>
+        </div>
+
+        <div class="clause">
+            <p><strong>OCTAVA. - OBSERVACIONES:</strong></p>
+            <p>{comentarios}</p>
+        </div>
+
+        <div class="clause">
+            <p><strong>NOVENA. - ACEPTACIÓN:</strong></p>
+            <p>Las partes manifiestan su conformidad con los términos del presente acuerdo y lo suscriben en la fecha indicada.</p>
+        </div>
+    </div>
+
+    <div class="signature-section">
+        <div>
+            <div class="signature-box">
+                {imagen_firma}
+            </div>
+            <p style="text-align: center; margin-top: 10px;">
+                <strong>EL ESTUDIANTE</strong><br>
+                {nombre_completo}<br>
+                C.C. {identificacion_personal}
+            </p>
+        </div>
+
+        <div>
+            <div class="signature-box">
+                FIRMA AUTORIZADA
+            </div>
+            <p style="text-align: center; margin-top: 10px;">
+                <strong>LA INSTITUCIÓN</strong><br>
+                Representante Legal
+            </p>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; font-size: 12px; text-align: center;">
+        <p>Fecha: ____________________</p>
+    </div>
+</body>
+</html>

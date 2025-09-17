@@ -10,6 +10,8 @@ use App\Http\Controllers\OnboardingLeadsController;
 use App\Http\Controllers\OnboardingCallsController;
 use App\Http\Controllers\LeadNotesController;
 use App\Http\Controllers\OnboardingDashboardController;
+use App\Http\Controllers\ContractSigningController;
+use App\Http\Controllers\ContractApprovalController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -42,6 +44,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/leads_form/{lead?}', [LeadsController::class, 'form'])->name('leads.form');
     Route::get('/llamadas', [LlamadasController::class, 'index'])->name('llamadas');
     Route::get('/leads/{id}/logs', [LeadsController::class, 'logs'])->name('leads.logs');
+    Route::get('/contracts/{saleId}/download', [LeadsController::class, 'downloadContract'])->name('contracts.download');
+    Route::post('/contracts/{saleId}/resend-email', [LeadsController::class, 'resendContractEmail'])->name('contracts.resend');
     Route::get('/leads_form/{llamada?}', [LlamadasController::class, 'form'])->name('llamadas.form');
 Route::get('/llamadas/{id}/respuestas-json', [LlamadasController::class, 'respuestasJson'])->name('llamadas.respuestas.json');
 Route::get('/leads/{id}/info-json', [LeadsController::class, 'infoJson'])->name('leads.info');
@@ -56,6 +60,8 @@ Route::get('sales/form/{lead}', [SalesController::class, 'form'])->name('sales.f
         Route::get('dashboard', [OnboardingDashboardController::class, 'index'])->name('dashboard');
         Route::get('leads', [OnboardingLeadsController::class, 'index'])->name('leads');
         Route::get('leads/{leadId}/calls', [OnboardingCallsController::class, 'getLeadCalls'])->name('leads.calls');
+        Route::get('leads/{id}/logs', [OnboardingLeadsController::class, 'logs'])->name('leads.logs');
+        Route::get('contracts/{saleId}/download', [OnboardingLeadsController::class, 'downloadContract'])->name('contracts.download');
         Route::post('calls', [OnboardingCallsController::class, 'store'])->name('calls.store');
         Route::put('calls/{callId}/status', [OnboardingCallsController::class, 'updateStatus'])->name('calls.update_status');
         Route::put('calls/{callId}/reschedule', [OnboardingCallsController::class, 'reschedule'])->name('calls.reschedule');
@@ -69,6 +75,23 @@ Route::get('sales/form/{lead}', [SalesController::class, 'form'])->name('sales.f
         Route::delete('/{noteId}', [LeadNotesController::class, 'destroy'])->name('destroy');
     });
 
+    // Rutas para aprobación de contratos (solo usuarios CMS)
+    Route::prefix('contracts/approval')->name('contracts.approval.')->group(function () {
+        Route::get('/', [ContractApprovalController::class, 'index'])->name('index');
+        Route::get('/{saleId}/edit', [ContractApprovalController::class, 'edit'])->name('edit');
+        Route::put('/{saleId}', [ContractApprovalController::class, 'update'])->name('update');
+        Route::post('/{saleId}/approve', [ContractApprovalController::class, 'approve'])->name('approve');
+        Route::post('/{saleId}/preview', [ContractApprovalController::class, 'previewAjax'])->name('preview');
+    });
+
+});
+
+// Rutas públicas para firma de contratos (sin autenticación)
+Route::prefix('contract')->name('contract.')->group(function () {
+    Route::get('sign/{token}', [ContractSigningController::class, 'show'])->name('sign');
+    Route::put('sign/{token}', [ContractSigningController::class, 'update'])->name('update');
+    Route::get('preview/{token}', [ContractSigningController::class, 'preview'])->name('preview');
+    Route::post('preview-ajax/{token}', [ContractSigningController::class, 'previewAjax'])->name('preview.ajax');
 });
 
 require __DIR__.'/auth.php';
