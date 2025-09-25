@@ -89,8 +89,13 @@ class LeadsController extends Controller
                             data-domicilio="' . e($lead->sale->domicilio) . '"
                             data-metodo_pago="' . e($lead->sale->metodo_pago) . '"
                             data-tipo_acuerdo="' . e($lead->sale->tipo_acuerdo) . '"
+                            data-tipo_contrato="' . e($lead->sale->tipo_contrato) . '"
                             data-comentarios="' . e($lead->sale->comentarios) . '"
                             data-comprobante="' . asset($lead->sale->comprobante_pago_path) . '"
+                            data-contrato="' . e($lead->sale->contractTemplate->name ?? 'N/A') . '"
+                            data-contrato_estado="' . ($lead->sale->contract_approved ? 'Aprobado' : 'Pendiente') . '"
+                            data-forma_pago="' . e($lead->sale->contract_data['forma_de_pago'] ?? 'N/A') . '"
+                            data-fecha_firma="' . ($lead->sale->contract_signed_date ? $lead->sale->contract_signed_date->format('d/m/Y H:i') : 'N/A') . '"
                             title="Ver Detalles de la Venta">
                             <i class="bi bi-eye"></i>
                         </button>';
@@ -187,17 +192,68 @@ class LeadsController extends Controller
 
     public function logs($id)
     {
-        $lead = Lead::with(['logs.usuario'])->findOrFail($id);
+        $lead = Lead::with(['sale', 'onboardingCalls'])->findOrFail($id);
 
-        return response()->json($lead->logs->map(function ($log) {
+        // Obtener todos los logs relacionados con este lead
+        $allLogs = collect();
+
+        // 1. Logs del lead (cambios de pipeline)
+        $leadLogs = Log::where('tabla', 'leads')
+            ->where('id_tabla', $id)
+            ->with('usuario')
+            ->get();
+        $allLogs = $allLogs->merge($leadLogs);
+
+        // 2. Logs de llamadas de onboarding
+        $callIds = $lead->onboardingCalls->pluck('id');
+        if ($callIds->isNotEmpty()) {
+            $callLogs = Log::where('tabla', 'onboarding_calls')
+                ->whereIn('id_tabla', $callIds)
+                ->with('usuario')
+                ->get();
+            $allLogs = $allLogs->merge($callLogs);
+        }
+
+        // 3. Logs de upsell si tiene venta
+        if ($lead->sale) {
+            $saleLogs = Log::where('tabla', 'sales')
+                ->where('id_tabla', $lead->sale->id)
+                ->where('tipo_log', 'upsell')
+                ->with('usuario')
+                ->get();
+            $allLogs = $allLogs->merge($saleLogs);
+        }
+
+        // Ordenar todos los logs por fecha descendente
+        $allLogs = $allLogs->sortByDesc('created_at');
+
+        return response()->json($allLogs->map(function ($log) {
             return [
-                'estado_anterior' => $log->valor_viejo,
-                'estado_nuevo' => $log->valor_nuevo,
+                'estado_anterior' => $log->valor_viejo ?? 'N/A',
+                'estado_nuevo' => $log->valor_nuevo ?? 'N/A',
                 'comentario' => $log->detalle,
                 'usuario' => $log->usuario->name ?? 'Desconocido',
                 'fecha' => $log->created_at->format('Y-m-d H:i'),
+                'tipo' => $this->getLogType($log->tabla, $log->tipo_log ?? null),
+                'archivo_soporte' => $log->archivo_soporte,
             ];
-        }));
+        })->values());
+    }
+
+    private function getLogType($tabla, $tipoLog = null)
+    {
+        switch ($tabla) {
+            case 'leads':
+                if ($tipoLog === 'venta') return 'Venta';
+                if ($tipoLog === 'contrato') return 'Contrato';
+                return 'Pipeline';
+            case 'onboarding_calls':
+                return 'Onboarding';
+            case 'sales':
+                return $tipoLog === 'upsell' ? 'Upsell' : 'Venta';
+            default:
+                return 'General';
+        }
     }
 
     public function downloadContract($saleId)

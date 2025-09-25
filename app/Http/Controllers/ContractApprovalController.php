@@ -101,13 +101,26 @@ class ContractApprovalController extends Controller
 
     public function approve($saleId)
     {
-        $sale = Sale::findOrFail($saleId);
+        $sale = Sale::with(['lead', 'contractTemplate'])->findOrFail($saleId);
 
         if ($sale->contract_approved) {
             return back()->with('error', 'Este contrato ya ha sido aprobado.');
         }
 
         $sale->update(['contract_approved' => true]);
+
+        // Crear log de contrato aprobado
+        \App\Models\Log::create([
+            'id_tabla' => $sale->lead->id,
+            'tabla' => 'leads',
+            'detalle' => 'Contrato aprobado por CSM. Contrato: ' . ($sale->contractTemplate->name ?? 'N/A'),
+            'archivo_soporte' => route('contracts.download', $sale->id),
+            'tipo_log' => 'contrato',
+            'valor_viejo' => 'pendiente_aprobacion',
+            'valor_nuevo' => 'aprobado',
+            'id_usuario' => \Illuminate\Support\Facades\Auth::id(),
+            'estado' => 1,
+        ]);
 
         return redirect()->route('contracts.approval.index')
             ->with('success', 'Contrato aprobado exitosamente.');

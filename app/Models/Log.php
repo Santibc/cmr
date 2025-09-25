@@ -15,6 +15,7 @@ class Log extends Model
         'id_tabla',
         'tabla',
         'detalle',
+        'archivo_soporte',
         'tipo_log',
         'valor_viejo',
         'valor_nuevo',

@@ -61,6 +61,14 @@
                                 </select>
                             </div>
                             <div class="mb-3">
+                                <label class="form-label">Tipo de Contrato <span class="text-danger">*</span></label>
+                                <select name="tipo_contrato" class="form-select" required>
+                                    <option value="">Seleccione el tipo de contrato</option>
+                                    <option value="low ticket" {{ old('tipo_contrato') == 'low ticket' ? 'selected' : '' }}>Low Ticket</option>
+                                    <option value="high ticket" {{ old('tipo_contrato') == 'high ticket' ? 'selected' : '' }}>High Ticket</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
                                 <label class="form-label">Comentarios/Aclaraciones</label>
                                 <textarea name="comentarios" class="form-control" rows="3">{{ old('comentarios') }}</textarea>
                             </div>

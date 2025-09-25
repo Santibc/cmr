@@ -14,11 +14,17 @@
     <i class="bi bi-speedometer2"></i>
     <span>Inicio</span>
 </a>
-@if (auth()->user()->getRoleNames()->first() == 'admin') 
+@if (auth()->user()->getRoleNames()->first() == 'admin')
 <a href="/usuarios"
    class="nav-link mb-2 d-flex align-items-center gap-2 {{ request()->is('usuarios*') ? 'active' : 'text-dark' }}">
     <i class="bi bi-person-lines-fill"></i>
     <span>Usuarios</span>
+</a>
+
+<a href="/upsell"
+   class="nav-link mb-2 d-flex align-items-center gap-2 {{ request()->is('upsell*') ? 'active' : 'text-dark' }}">
+    <i class="bi bi-arrow-up-circle"></i>
+    <span>Upsells</span>
 </a>
 @endif
 @if (auth()->user()->getRoleNames()->first() == 'admin' || auth()->user()->getRoleNames()->first() == 'closer')

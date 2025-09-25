@@ -33,12 +33,17 @@ class SalesController extends Controller
             'metodo_pago' => 'required|string|max:100',
             'comprobante_pago' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'tipo_acuerdo' => 'required|string|max:100',
+            'tipo_contrato' => 'required|in:low ticket,high ticket',
             'comentarios' => 'nullable|string',
             'contract_template_id' => 'required|exists:contract_templates,id',
             'forma_de_pago' => 'required|string',
         ]);
 
-        $path = $request->file('comprobante_pago')->store('comprobantes', 'public');
+        // Guardar comprobante directamente en public
+        $file = $request->file('comprobante_pago');
+        $filename = time() . '_comprobante_' . $file->getClientOriginalName();
+        $file->move(public_path('comprobantes'), $filename);
+        $path = 'comprobantes/' . $filename;
         $lead = lead::findOrFail($request->lead_id);
 
         // Generar token único para el contrato
@@ -67,10 +72,24 @@ class SalesController extends Controller
             'metodo_pago' => $validated['metodo_pago'],
             'comprobante_pago_path' => $path,
             'tipo_acuerdo' => $validated['tipo_acuerdo'],
+            'tipo_contrato' => $validated['tipo_contrato'],
             'comentarios' => $validated['comentarios'],
             'contract_template_id' => $validated['contract_template_id'],
             'contract_data' => $contractData,
             'contract_token' => $contractToken,
+        ]);
+
+        // Crear log de venta registrada
+        \App\Models\Log::create([
+            'id_tabla' => $lead->id,
+            'tabla' => 'leads',
+            'detalle' => 'Venta registrada exitosamente. Tipo: ' . $validated['tipo_contrato'] . ', Método de pago: ' . $validated['metodo_pago'],
+            'archivo_soporte' => asset($path),
+            'tipo_log' => 'venta',
+            'valor_viejo' => null,
+            'valor_nuevo' => 'venta_registrada',
+            'id_usuario' => Auth::id(),
+            'estado' => 1,
         ]);
 
         // Cargar la relación contractTemplate para el email

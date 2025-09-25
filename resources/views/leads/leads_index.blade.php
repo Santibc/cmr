@@ -59,35 +59,8 @@
         </div>
     </div>
 
-    <!-- Modal para información de venta -->
-    <div class="modal fade" id="saleInfoModal" tabindex="-1" aria-labelledby="saleInfoModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Detalles de la Venta</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-6"><strong>Nombre:</strong> <span id="modal-nombre"></span></div>
-                        <div class="col-md-6"><strong>Apellido:</strong> <span id="modal-apellido"></span></div>
-                        <div class="col-md-6"><strong>Email:</strong> <span id="modal-email"></span></div>
-                        <div class="col-md-6"><strong>Teléfono:</strong> <span id="modal-telefono"></span></div>
-                        <div class="col-md-6"><strong>ID Personal:</strong> <span id="modal-identificacion"></span></div>
-                        <div class="col-md-6"><strong>Domicilio:</strong> <span id="modal-domicilio"></span></div>
-                        <div class="col-md-6"><strong>Método de Pago:</strong> <span id="modal-metodo-pago"></span></div>
-                        <div class="col-md-6"><strong>Tipo Acuerdo:</strong> <span id="modal-tipo-acuerdo"></span></div>
-                        <div class="col-12 mt-2"><strong>Comentarios:</strong> <span id="modal-comentarios"></span></div>
-                        <div class="mt-3 text-end">
-                            <a id="btnDescargarComprobante" href="#" target="_blank" class="btn btn-outline-success">
-                                <i class="bi bi-download me-1"></i> Descargar Comprobante de Pago
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Usar componente reutilizable para modal de venta -->
+    <x-sale-details-modal />
 
     <!-- Modal para historial de cambios -->
     <div class="modal fade" id="logsModal" tabindex="-1" aria-labelledby="logsModalLabel" aria-hidden="true">
@@ -101,15 +74,17 @@
                     <table class="table table-bordered table-sm">
                         <thead class="table-light">
                             <tr>
+                                <th>Tipo</th>
                                 <th>Estado anterior</th>
                                 <th>Estado nuevo</th>
                                 <th>Comentario</th>
                                 <th>Usuario</th>
                                 <th>Fecha</th>
+                                <th>Soportes</th>
                             </tr>
                         </thead>
                         <tbody id="logsTableBody">
-                            <tr><td colspan="5" class="text-center">Cargando...</td></tr>
+                            <tr><td colspan="7" class="text-center">Cargando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -122,45 +97,91 @@
     $(document).on('click', '.view-logs-btn', function () {
         const leadId = $(this).data('lead-id');
         $('#logsModal').modal('show');
-        $('#logsTableBody').html('<tr><td colspan="5" class="text-center">Cargando...</td></tr>');
+        $('#logsTableBody').html('<tr><td colspan="7" class="text-center">Cargando...</td></tr>');
 
         $.get(`/leads/${leadId}/logs`, function (data) {
             if (data.length === 0) {
-                $('#logsTableBody').html('<tr><td colspan="5" class="text-center">Sin registros</td></tr>');
+                $('#logsTableBody').html('<tr><td colspan="7" class="text-center">Sin registros</td></tr>');
                 return;
             }
 
             let rows = '';
             data.forEach(log => {
+                const tipoBadge = getTipoBadge(log.tipo);
+                const soportesButton = getSoportesButton(log.archivo_soporte);
                 rows += `
                     <tr>
+                        <td>${tipoBadge}</td>
                         <td>${log.estado_anterior}</td>
                         <td>${log.estado_nuevo}</td>
                         <td>${log.comentario}</td>
                         <td>${log.usuario}</td>
                         <td>${log.fecha}</td>
+                        <td>${soportesButton}</td>
                     </tr>
                 `;
             });
 
             $('#logsTableBody').html(rows);
         }).fail(() => {
-            $('#logsTableBody').html('<tr><td colspan="5" class="text-danger text-center">Error al cargar los logs.</td></tr>');
+            $('#logsTableBody').html('<tr><td colspan="7" class="text-danger text-center">Error al cargar los logs.</td></tr>');
         });
     });
 
+    function getTipoBadge(tipo) {
+        switch(tipo) {
+            case 'Pipeline':
+                return '<span class="badge bg-primary">Pipeline</span>';
+            case 'Onboarding':
+                return '<span class="badge bg-info">Onboarding</span>';
+            case 'Upsell':
+                return '<span class="badge bg-success">Upsell</span>';
+            case 'Venta':
+                return '<span class="badge bg-warning">Venta</span>';
+            case 'Contrato':
+                return '<span class="badge bg-dark">Contrato</span>';
+            default:
+                return '<span class="badge bg-secondary">General</span>';
+        }
+    }
+
+    function getSoportesButton(archivoSoporte) {
+        if (!archivoSoporte) {
+            return '<span class="text-muted">-</span>';
+        }
+
+        return `<a href="${archivoSoporte}" target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-download"></i> Descargar
+                </a>`;
+    }
+
     $(document).on('click', '.view-sale-btn', function () {
-        $('#modal-nombre').text($(this).data('nombre'));
-        $('#modal-apellido').text($(this).data('apellido'));
-        $('#modal-email').text($(this).data('email'));
-        $('#modal-telefono').text($(this).data('telefono'));
-        $('#modal-identificacion').text($(this).data('identificacion'));
-        $('#modal-domicilio').text($(this).data('domicilio'));
-        $('#modal-metodo-pago').text($(this).data('metodo_pago'));
-        $('#modal-tipo-acuerdo').text($(this).data('tipo_acuerdo'));
-        $('#modal-comentarios').text($(this).data('comentarios'));
+        // Información del Cliente
+        $('#modal-nombre').text($(this).data('nombre') || 'N/A');
+        $('#modal-apellido').text($(this).data('apellido') || 'N/A');
+        $('#modal-email').text($(this).data('email') || 'N/A');
+        $('#modal-telefono').text($(this).data('telefono') || 'N/A');
+        $('#modal-identificacion').text($(this).data('identificacion') || 'N/A');
+        $('#modal-domicilio').text($(this).data('domicilio') || 'N/A');
+
+        // Información de Pago
+        $('#modal-metodo-pago').text($(this).data('metodo_pago') || 'N/A');
+        $('#modal-tipo-acuerdo').text($(this).data('tipo_acuerdo') || 'N/A');
+        $('#modal-tipo-contrato').text($(this).data('tipo_contrato') || 'N/A');
+
+        // Información del Contrato
+        $('#modal-contrato').text($(this).data('contrato') || 'N/A');
+        $('#modal-contrato-estado').text($(this).data('contrato_estado') || 'N/A');
+        $('#modal-forma-pago').text($(this).data('forma_pago') || 'N/A');
+        $('#modal-fecha-firma').text($(this).data('fecha_firma') || 'N/A');
+
+        // Comentarios
+        $('#modal-comentarios').text($(this).data('comentarios') || 'Sin comentarios');
+
+        // Comprobante
         const comprobanteUrl = $(this).data('comprobante');
         $('#btnDescargarComprobante').attr('href', comprobanteUrl);
+
         $('#saleInfoModal').modal('show');
     });
 

@@ -12,6 +12,7 @@ use App\Http\Controllers\LeadNotesController;
 use App\Http\Controllers\OnboardingDashboardController;
 use App\Http\Controllers\ContractSigningController;
 use App\Http\Controllers\ContractApprovalController;
+use App\Http\Controllers\UpsellController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -92,6 +93,14 @@ Route::prefix('contract')->name('contract.')->group(function () {
     Route::put('sign/{token}', [ContractSigningController::class, 'update'])->name('update');
     Route::get('preview/{token}', [ContractSigningController::class, 'preview'])->name('preview');
     Route::post('preview-ajax/{token}', [ContractSigningController::class, 'previewAjax'])->name('preview.ajax');
+});
+
+// Rutas para gestión de Upsells (solo admin)
+Route::middleware(['auth', 'verified'])->prefix('upsell')->name('upsell.')->group(function () {
+    Route::get('/', [UpsellController::class, 'index'])->name('index');
+    Route::post('{sale}/pendiente', [UpsellController::class, 'markPendiente'])->name('mark.pendiente');
+    Route::post('{sale}/approve', [UpsellController::class, 'approve'])->name('approve');
+    Route::get('{sale}/logs', [UpsellController::class, 'getLogs'])->name('logs');
 });
 
 require __DIR__.'/auth.php';

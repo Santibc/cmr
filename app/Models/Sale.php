@@ -22,18 +22,28 @@ class Sale extends Model
         'metodo_pago',
         'comprobante_pago_path',
         'tipo_acuerdo',
+        'tipo_contrato',
         'comentarios',
         'contract_template_id',
         'contract_approved',
         'contract_data',
         'contract_token',
         'contract_signed_date',
+        'upsell',
+        'upsell_comprobante_path',
+        'upsell_comentarios',
+        'upsell_fecha_pendiente',
+        'upsell_fecha_aprobado',
+        'upsell_user_pendiente',
+        'upsell_user_aprobado',
     ];
 
     protected $casts = [
         'contract_data' => 'array',
         'contract_approved' => 'boolean',
         'contract_signed_date' => 'datetime',
+        'upsell_fecha_pendiente' => 'datetime',
+        'upsell_fecha_aprobado' => 'datetime',
     ];
 
     // Relaciones
@@ -56,5 +66,15 @@ class Sale extends Model
     public function contractTemplate()
     {
         return $this->belongsTo(ContractTemplate::class);
+    }
+
+    public function upsellUserPendiente()
+    {
+        return $this->belongsTo(User::class, 'upsell_user_pendiente');
+    }
+
+    public function upsellUserAprobado()
+    {
+        return $this->belongsTo(User::class, 'upsell_user_aprobado');
     }
 }
