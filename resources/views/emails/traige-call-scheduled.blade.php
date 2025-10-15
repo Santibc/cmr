@@ -90,7 +90,7 @@
 <body>
     <div class="header">
         <h1>¡Llamada de Triage Programada!</h1>
-        <p>Formulahighticket</p>
+        <p>ELITE CLOSER SOCIETY</p>
     </div>
 
     <div class="content">
@@ -147,12 +147,12 @@
         <p>¡Esperamos con ansias conocerte!</p>
 
         <p>Saludos cordiales,<br>
-        <strong>El equipo de Formulahighticket</strong></p>
+        <strong>El equipo de ELITE CLOSER SOCIETY</strong></p>
     </div>
 
     <div class="footer">
         <p>Este es un email automático, por favor no responder directamente.</p>
-        <p>© {{ date('Y') }} Formulahighticket. Todos los derechos reservados.</p>
+        <p>© {{ date('Y') }} ELITE CLOSER SOCIETY. Todos los derechos reservados.</p>
     </div>
 </body>
 </html>

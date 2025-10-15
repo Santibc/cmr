@@ -235,7 +235,7 @@ class FinalContractTemplatesSeeder extends Seeder
     </div>
 
     <div class="subsection">
-        <strong>5.2</strong> Todas las notificaciones y comunicaciones que se realicen en virtud del presente Acuerdo se enviarán por correo electrónico a Formulahighticket@gmail.com o a cualquier otra dirección que las Partes notifiquen periódicamente cambiando de dirección.
+        <strong>5.2</strong> Todas las notificaciones y comunicaciones que se realicen en virtud del presente Acuerdo se enviarán por correo electrónico a eliteclosersociety@gmail.com o a cualquier otra dirección que las Partes notifiquen periódicamente cambiando de dirección.
     </div>
 
     <div class="article-title">
