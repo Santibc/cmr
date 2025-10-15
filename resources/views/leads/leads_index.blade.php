@@ -132,6 +132,10 @@
         switch(tipo) {
             case 'Pipeline':
                 return '<span class="badge bg-primary">Pipeline</span>';
+            case 'Traige':
+                return '<span class="badge bg-info">Triage</span>';
+            case 'Llamadas Traige':
+                return '<span class="badge bg-success">Llamadas</span>';
             case 'Onboarding':
                 return '<span class="badge bg-info">Onboarding</span>';
             case 'Upsell':

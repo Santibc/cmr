@@ -18,7 +18,14 @@
       "Bash(\"E:\\xampp8.20\\mysql\\bin\\mysql.exe\" -u root -e \"SELECT contract_data FROM cmr_prod.sales WHERE contract_data IS NOT NULL LIMIT 3;\")",
       "Bash(\"E:\\xampp8.20\\mysql\\bin\\mysql.exe\" -u root -e \"DESCRIBE cmr_prod.sales;\")",
       "Bash(\"E:\\xampp8.20\\mysql\\bin\\mysql.exe\" -u root -e \"SELECT id, tipo_contrato, created_at FROM cmr_prod.sales ORDER BY id DESC LIMIT 5;\")",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(\"E:\\xampp8.20\\mysql\\bin\\mysql.exe\":*)",
+      "Bash(\"E:\\xampp8.20\\mysql\\bin\\mysql.exe\" -u root -e \"SELECT id, contract_template_id FROM cmr_prod.sales WHERE id = 21;\")",
+      "Bash(\"E:\\xampp8.20\\mysql\\bin\\mysql.exe\" -u root -e \"UPDATE cmr_prod.contract_templates SET dynamic_fields = ''[\"\"dia\"\",\"\"mes\"\",\"\"anio\"\",\"\"nombre\"\",\"\"dni\"\",\"\"forma_de_pago\"\",\"\"imagen_firma\"\",\"\"aclaracion\"\"]'' WHERE id = 18;\")",
+      "Bash(\"E:\\xampp8.20\\mysql\\bin\\mysql.exe\" -u root -e \"SELECT id, name, dynamic_fields FROM cmr_prod.contract_templates WHERE id = 18;\")",
+      "Bash(\"E:\\xampp8.20\\mysql\\bin\\mysql.exe\" -u root -e \"SELECT id, name, dynamic_fields FROM cmr_prod.contract_templates;\")",
+      "Bash(\"E:\\xampp8.20\\mysql\\bin\\mysql.exe\" -u root -e \"ALTER TABLE cmr_prod.sales MODIFY COLUMN tipo_contrato ENUM(''low ticket'', ''high ticket'', ''beca'') NULL;\")",
+      "Bash(\"E:\\xampp8.20\\mysql\\bin\\mysql.exe\" -u root -e \"SELECT COUNT(*) as total FROM cmr_prod.leads WHERE created_at >= DATE_FORMAT(NOW(), ''%Y-%m-01'');\")"
     ],
     "deny": [],
     "ask": []

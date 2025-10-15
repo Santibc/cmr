@@ -60,12 +60,24 @@ class LeadsController extends Controller
             // Construir la consulta base una sola vez
             $query = Lead::with('pipelineStatus', 'user', 'sale.contractTemplate')->orderByDesc('id');
 
+            // FILTRO IMPORTANTE: Solo mostrar leads que han sido pasados desde traige
+            $query->where('passed_to_closer', true);
+
             // Aplicar filtro por rol al query existente
             if (auth()->user()->getRoleNames()->first() !== 'admin') {
                 $query->where('user_id', Auth::id());
             }
-            
-            $pipelineStatuses = PipelineStatus::all();
+
+            // Filtrar solo los estados originales para closers (excluir estados de traige)
+            $traigeStatusNames = [
+                'Llamadas agendadas',
+                'Asistencias',
+                'Canceladas',
+                'Calificadas',
+                'Tasa de asistencia',
+                'Tasa de calificación'
+            ];
+            $pipelineStatuses = PipelineStatus::whereNotIn('name', $traigeStatusNames)->get();
 
             return DataTables::of($query)
                 ->addColumn('action', function ($lead) {
@@ -192,19 +204,29 @@ class LeadsController extends Controller
 
     public function logs($id)
     {
-        $lead = Lead::with(['sale', 'onboardingCalls'])->findOrFail($id);
+        $lead = Lead::with(['sale', 'onboardingCalls', 'traigeCalls'])->findOrFail($id);
 
         // Obtener todos los logs relacionados con este lead
         $allLogs = collect();
 
-        // 1. Logs del lead (cambios de pipeline)
+        // 1. Logs del lead (cambios de pipeline en traige y closers)
         $leadLogs = Log::where('tabla', 'leads')
             ->where('id_tabla', $id)
             ->with('usuario')
             ->get();
         $allLogs = $allLogs->merge($leadLogs);
 
-        // 2. Logs de llamadas de onboarding
+        // 2. Logs de llamadas de traige
+        $traigeCallIds = $lead->traigeCalls->pluck('id');
+        if ($traigeCallIds->isNotEmpty()) {
+            $traigeCallLogs = Log::where('tabla', 'traige_calls')
+                ->whereIn('id_tabla', $traigeCallIds)
+                ->with('usuario')
+                ->get();
+            $allLogs = $allLogs->merge($traigeCallLogs);
+        }
+
+        // 3. Logs de llamadas de onboarding
         $callIds = $lead->onboardingCalls->pluck('id');
         if ($callIds->isNotEmpty()) {
             $callLogs = Log::where('tabla', 'onboarding_calls')
@@ -214,7 +236,7 @@ class LeadsController extends Controller
             $allLogs = $allLogs->merge($callLogs);
         }
 
-        // 3. Logs de upsell si tiene venta
+        // 4. Logs de upsell si tiene venta
         if ($lead->sale) {
             $saleLogs = Log::where('tabla', 'sales')
                 ->where('id_tabla', $lead->sale->id)
@@ -244,9 +266,18 @@ class LeadsController extends Controller
     {
         switch ($tabla) {
             case 'leads':
-                if ($tipoLog === 'venta') return 'Venta';
-                if ($tipoLog === 'contrato') return 'Contrato';
-                return 'Pipeline';
+                // Si tiene tipo_log = 'traige', mostrar Traige, sino Pipeline
+                if ($tipoLog === 'traige') {
+                    return 'Traige';
+                } elseif ($tipoLog === 'venta') {
+                    return 'Venta';
+                } elseif ($tipoLog === 'contrato') {
+                    return 'Contrato';
+                } else {
+                    return 'Pipeline';
+                }
+            case 'traige_calls':
+                return 'Llamadas Traige';
             case 'onboarding_calls':
                 return 'Onboarding';
             case 'sales':

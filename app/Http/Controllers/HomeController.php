@@ -53,17 +53,29 @@ class HomeController extends Controller
         $leadsWithSales = Lead::whereHas('sale')->where('created_at', '>=', $currentMonth)->count();
         $conversionRate = $leadsThisMonth > 0 ? ($leadsWithSales / $leadsThisMonth) * 100 : 0;
 
-        // Distribución por pipeline
+        // Distribución por pipeline - mostrar todos los leads si no hay datos del mes actual
         $pipelineDistribution = Lead::select('pipeline_statuses.name', DB::raw('count(*) as count'))
             ->join('pipeline_statuses', 'leads.pipeline_status_id', '=', 'pipeline_statuses.id')
-            ->where('leads.created_at', '>=', $currentMonth)
+            ->when($leadsThisMonth === 0, function($query) {
+                // Si no hay leads este mes, mostrar todos los leads
+                return $query;
+            }, function($query) use ($currentMonth) {
+                // Si hay leads este mes, filtrar por mes actual
+                return $query->where('leads.created_at', '>=', $currentMonth);
+            })
             ->groupBy('pipeline_statuses.id', 'pipeline_statuses.name')
             ->get();
 
-        // Top performers (closers con más ventas)
+        // Top performers (closers con más ventas) - del mes actual o todos si no hay datos
         $topClosers = User::select('users.name', DB::raw('count(sales.id) as sales_count'))
             ->join('sales', 'users.id', '=', 'sales.user_id')
-            ->where('sales.created_at', '>=', $currentMonth)
+            ->when($leadsThisMonth === 0, function($query) {
+                // Si no hay leads este mes, mostrar todas las ventas
+                return $query;
+            }, function($query) use ($currentMonth) {
+                // Si hay leads este mes, filtrar por mes actual
+                return $query->where('sales.created_at', '>=', $currentMonth);
+            })
             ->groupBy('users.id', 'users.name')
             ->orderByDesc('sales_count')
             ->limit(5)
@@ -85,9 +97,15 @@ class HomeController extends Controller
         $callsThisMonth = OnboardingCall::where('created_at', '>=', $currentMonth)->count();
         $callsPreviousMonth = OnboardingCall::whereBetween('created_at', [$previousMonth, $previousMonthEnd])->count();
 
-        // Llamadas por estado
+        // Llamadas por estado - mostrar todas si no hay del mes actual
         $callsByStatus = OnboardingCall::select('status', DB::raw('count(*) as count'))
-            ->where('created_at', '>=', $currentMonth)
+            ->when($callsThisMonth === 0, function($query) {
+                // Si no hay llamadas este mes, mostrar todas las llamadas
+                return $query;
+            }, function($query) use ($currentMonth) {
+                // Si hay llamadas este mes, filtrar por mes actual
+                return $query->where('created_at', '>=', $currentMonth);
+            })
             ->groupBy('status')
             ->get();
 

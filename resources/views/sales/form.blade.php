@@ -66,6 +66,7 @@
                                     <option value="">Seleccione el tipo de contrato</option>
                                     <option value="low ticket" {{ old('tipo_contrato') == 'low ticket' ? 'selected' : '' }}>Low Ticket</option>
                                     <option value="high ticket" {{ old('tipo_contrato') == 'high ticket' ? 'selected' : '' }}>High Ticket</option>
+                                    <option value="beca" {{ old('tipo_contrato') == 'beca' ? 'selected' : '' }}>Beca</option>
                                 </select>
                             </div>
                             <div class="mb-3">

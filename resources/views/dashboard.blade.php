@@ -638,16 +638,29 @@
 
                 const contractTypes = @json($metrics['general']['contract_types'] ?? []);
 
+                // Mapear labels correctamente para los 3 tipos
+                const labels = contractTypes.map(item => {
+                    if (item.tipo_contrato === 'high ticket') return 'High Ticket';
+                    if (item.tipo_contrato === 'low ticket') return 'Low Ticket';
+                    if (item.tipo_contrato === 'beca') return 'Beca';
+                    return item.tipo_contrato;
+                });
+
+                // Mapear colores según tipo
+                const backgroundColors = contractTypes.map(item => {
+                    if (item.tipo_contrato === 'high ticket') return colors.success; // Verde
+                    if (item.tipo_contrato === 'low ticket') return colors.warning; // Amarillo
+                    if (item.tipo_contrato === 'beca') return colors.info; // Azul
+                    return colors.secondary;
+                });
+
                 new Chart(ctx, {
                     type: 'doughnut',
                     data: {
-                        labels: contractTypes.map(item => item.tipo_contrato === 'high ticket' ? 'High Ticket' : 'Low Ticket'),
+                        labels: labels,
                         datasets: [{
                             data: contractTypes.map(item => item.count),
-                            backgroundColor: [
-                                colors.success, // High ticket verde
-                                colors.warning  // Low ticket amarillo
-                            ]
+                            backgroundColor: backgroundColors
                         }]
                     },
                     options: {

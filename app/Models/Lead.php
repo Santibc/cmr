@@ -15,6 +15,9 @@ class Lead extends Model
         'email',
         'telefono',
         'instagram_user',
+        'passed_to_closer',
+        'passed_to_closer_at',
+        'passed_by_user_id',
     ];
 
     // Un lead puede tener varias llamadas
@@ -51,5 +54,13 @@ public function onboardingCalls()
 public function notes()
 {
     return $this->hasMany(LeadNote::class)->latest();
+}
+public function traigeCalls()
+{
+    return $this->hasMany(TraigeCall::class);
+}
+public function passedByUser()
+{
+    return $this->belongsTo(User::class, 'passed_by_user_id');
 }
 }

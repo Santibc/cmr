@@ -33,7 +33,7 @@ class SalesController extends Controller
             'metodo_pago' => 'required|string|max:100',
             'comprobante_pago' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             'tipo_acuerdo' => 'required|string|max:100',
-            'tipo_contrato' => 'required|in:low ticket,high ticket',
+            'tipo_contrato' => 'required|in:low ticket,high ticket,beca',
             'comentarios' => 'nullable|string',
             'contract_template_id' => 'required|exists:contract_templates,id',
             'forma_de_pago' => 'required|string',

@@ -13,6 +13,8 @@ use App\Http\Controllers\OnboardingDashboardController;
 use App\Http\Controllers\ContractSigningController;
 use App\Http\Controllers\ContractApprovalController;
 use App\Http\Controllers\UpsellController;
+use App\Http\Controllers\TraigeController;
+use App\Http\Controllers\TraigeCallsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,6 +57,21 @@ Route::get('sales/form/{lead}', [SalesController::class, 'form'])->name('sales.f
         Route::post('store', [SalesController::class, 'store'])->name('store');
     });
         Route::post('leads/{id}/update-status', [LeadsController::class, 'updatePipelineStatus'])->name('leads.update_status');
+
+    // Rutas del módulo Traige
+    Route::prefix('traige')->name('traige.')->group(function () {
+        Route::get('/', [TraigeController::class, 'index'])->name('index');
+        Route::post('{id}/update-status', [TraigeController::class, 'updatePipelineStatus'])->name('update_status');
+        Route::post('{id}/pass-to-closer', [TraigeController::class, 'passToCloser'])->name('pass_to_closer');
+        Route::get('{id}/logs', [TraigeController::class, 'logs'])->name('logs');
+
+        // Rutas para llamadas de traige
+        Route::post('calls', [TraigeCallsController::class, 'store'])->name('calls.store');
+        Route::get('calls/lead/{leadId}', [TraigeCallsController::class, 'getLeadCalls'])->name('calls.lead');
+        Route::put('calls/{callId}/status', [TraigeCallsController::class, 'updateStatus'])->name('calls.update_status');
+        Route::put('calls/{callId}/reschedule', [TraigeCallsController::class, 'reschedule'])->name('calls.reschedule');
+        Route::get('calls/{callId}/logs', [TraigeCallsController::class, 'getLogs'])->name('calls.logs');
+    });
 
     // Rutas de Onboarding para rol CMS
     Route::prefix('onboarding')->name('onboarding.')->group(function () {

@@ -27,6 +27,13 @@
     <span>Upsells</span>
 </a>
 @endif
+@if (auth()->user()->getRoleNames()->first() == 'admin' || auth()->user()->getRoleNames()->first() == 'traige')
+    <a href="/traige"
+    class="nav-link mb-2 d-flex align-items-center gap-2 {{ request()->is('traige*') ? 'active' : 'text-dark' }}">
+        <i class="bi bi-funnel-fill"></i>
+        <span>Triage</span>
+    </a>
+@endif
 @if (auth()->user()->getRoleNames()->first() == 'admin' || auth()->user()->getRoleNames()->first() == 'closer')
     <a href="/leads"
     class="nav-link mb-2 d-flex align-items-center gap-2 {{ request()->is('leads*') && !request()->is('onboarding/leads*') ? 'active' : 'text-dark' }}">
