@@ -212,6 +212,45 @@
         </div>
     </div>
 
+    <!-- Modal para crear nuevo lead -->
+    <div class="modal fade" id="newLeadModal" tabindex="-1" aria-labelledby="newLeadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newLeadModalLabel">Registrar Nuevo Lead</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="newLeadForm">
+                        <div class="mb-3">
+                            <label for="newLeadNombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="newLeadNombre" name="nombre" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="newLeadEmail" class="form-label">Email <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="newLeadEmail" name="email" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="newLeadTelefono" class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" id="newLeadTelefono" name="telefono">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="newLeadInstagram" class="form-label">Instagram</label>
+                            <input type="text" class="form-control" id="newLeadInstagram" name="instagram_user" placeholder="@usuario">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveNewLead">Guardar Lead</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -262,6 +301,13 @@
                     extend: 'excelHtml5',
                     text: 'Excel',
                     className: 'btn btn-outline-success'
+                },
+                {
+                    text: '<i class="bi bi-plus-circle"></i> Nuevo',
+                    className: 'btn btn-outline-primary',
+                    action: function (e, dt, node, config) {
+                        $('#newLeadModal').modal('show');
+                    }
                 }
             ],
             language: {
@@ -745,6 +791,62 @@
         $(document).on('click', '.view-traige-calls-btn', function() {
             $('.view-traige-calls-btn').removeClass('last-clicked');
             $(this).addClass('last-clicked');
+        });
+
+        // ==================== GUARDAR NUEVO LEAD ====================
+        $('#saveNewLead').on('click', function() {
+            const form = $('#newLeadForm')[0];
+
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const formData = {
+                _token: '{{ csrf_token() }}',
+                nombre: $('#newLeadNombre').val(),
+                email: $('#newLeadEmail').val(),
+                telefono: $('#newLeadTelefono').val(),
+                instagram_user: $('#newLeadInstagram').val()
+            };
+
+            $.ajax({
+                url: '{{ route("traige.store") }}',
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: 'Lead registrado exitosamente.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        $('#newLeadModal').modal('hide');
+                        $('#newLeadForm')[0].reset();
+                        $('#traige-table').DataTable().ajax.reload(null, false);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Error al registrar el lead.';
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage
+                    });
+                    console.error(xhr.responseText);
+                }
+            });
         });
     });
 </script>

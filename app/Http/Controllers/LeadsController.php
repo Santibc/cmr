@@ -65,7 +65,10 @@ class LeadsController extends Controller
 
             // Aplicar filtro por rol al query existente
             if (auth()->user()->getRoleNames()->first() !== 'admin') {
-                $query->where('user_id', Auth::id());
+                $query->where(function($q) {
+                    $q->where('user_id', Auth::id())
+                      ->orWhereNull('user_id');
+                });
             }
 
             // Filtrar solo los estados originales para closers (excluir estados de traige)

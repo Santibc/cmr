@@ -15,6 +15,7 @@ class Lead extends Model
         'email',
         'telefono',
         'instagram_user',
+        'pipeline_status_id',
         'passed_to_closer',
         'passed_to_closer_at',
         'passed_by_user_id',

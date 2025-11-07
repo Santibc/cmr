@@ -212,6 +212,55 @@ class TraigeController extends Controller
     }
 
     /**
+     * Almacena un nuevo lead creado manualmente desde traige
+     */
+    public function store(Request $request)
+    {
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'telefono' => 'nullable|string|max:50',
+            'instagram_user' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            $lead = Lead::create([
+                'nombre' => $request->nombre,
+                'email' => $request->email,
+                'telefono' => $request->telefono,
+                'instagram_user' => $request->instagram_user,
+                'user_id' => null,
+                'pipeline_status_id' => 1,
+                'passed_to_closer' => false,
+                'passed_to_closer_at' => null,
+                'passed_by_user_id' => null,
+            ]);
+
+            // Crear log de creación manual
+            Log::create([
+                'id_tabla' => $lead->id,
+                'tabla' => 'leads',
+                'tipo_log' => 'traige',
+                'detalle' => 'Lead creado manualmente desde el módulo de traige',
+                'valor_viejo' => null,
+                'valor_nuevo' => 'Lead creado',
+                'id_usuario' => Auth::id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lead registrado exitosamente.',
+                'lead' => $lead
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al registrar el lead: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Obtiene los logs de un lead (pipeline + traige calls)
      */
     public function logs($id)

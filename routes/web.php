@@ -61,6 +61,7 @@ Route::get('sales/form/{lead}', [SalesController::class, 'form'])->name('sales.f
     // Rutas del módulo Traige
     Route::prefix('traige')->name('traige.')->group(function () {
         Route::get('/', [TraigeController::class, 'index'])->name('index');
+        Route::post('/', [TraigeController::class, 'store'])->name('store');
         Route::post('{id}/update-status', [TraigeController::class, 'updatePipelineStatus'])->name('update_status');
         Route::post('{id}/pass-to-closer', [TraigeController::class, 'passToCloser'])->name('pass_to_closer');
         Route::get('{id}/logs', [TraigeController::class, 'logs'])->name('logs');
