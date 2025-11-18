@@ -96,6 +96,14 @@ class TraigeController extends Controller
                         <i class="bi bi-telephone"></i>
                     </button>';
 
+                    // Botón de llenar Triage Daily
+                    $buttons .= '<button type="button" class="btn btn-outline-warning btn-sm fill-traige-daily-btn"
+                        data-lead-id="' . $lead->id . '"
+                        data-lead-name="' . e($lead->nombre) . '"
+                        title="Llenar Triage Daily">
+                        <i class="bi bi-file-text"></i>
+                    </button>';
+
                     // Botón de historial de cambios
                     $buttons .= '<button type="button" class="btn btn-outline-info btn-sm view-logs-btn"
                         data-lead-id="' . $lead->id . '" title="Ver Historial de Cambios">

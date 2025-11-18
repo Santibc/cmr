@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\ContractTemplate;
+use App\Models\Form;
+use App\Models\FormSubmission;
+use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -29,7 +32,13 @@ class ContractSigningController extends Controller
             return !in_array($field, $excludedFields);
         });
 
-        return view('contracts.sign', compact('sale', 'contractTemplate', 'missingFields'));
+        // Obtener formulario Elite Closer Society Onboarding
+        $eliteForm = Form::where('slug', 'elite-closer-society-onboarding')
+            ->where('status', 'active')
+            ->with('fields')
+            ->first();
+
+        return view('contracts.sign', compact('sale', 'contractTemplate', 'missingFields', 'eliteForm'));
     }
 
     public function update(Request $request, $token)
@@ -42,28 +51,31 @@ class ContractSigningController extends Controller
             return redirect()->route('contract.preview', $token)->with('error', 'Este contrato ya ha sido firmado anteriormente.');
         }
 
-        // Validar campos dinámicos
-        $rules = [];
+        // ============ PARTE 1: VALIDAR Y GUARDAR CONTRATO (NO TOCAR) ============
+
+        // Validar campos dinámicos del contrato
+        $contractRules = [];
         $excludedFields = ['dia', 'mes', 'anio', 'forma_de_pago'];
         foreach ($contractTemplate->dynamic_fields as $field) {
-            if (!in_array($field, $excludedFields)) { // Excluir solo fecha y forma_de_pago
-                $rules[$field] = 'required|string';
+            if (!in_array($field, $excludedFields)) {
+                $contractRules[$field] = 'required|string';
             }
         }
 
         // Manejo especial para imagen de firma
         if (in_array('imagen_firma', $contractTemplate->dynamic_fields)) {
-            $rules['imagen_firma'] = 'required|string'; // Base64 de la firma
+            $contractRules['imagen_firma'] = 'required|string'; // Base64 de la firma
         }
 
-        $validated = $request->validate($rules);
+        // Validar contrato
+        $validatedContract = $request->validate($contractRules);
 
         // Combinar con datos existentes
-        $contractData = array_merge($sale->contract_data ?? [], $validated);
+        $contractData = array_merge($sale->contract_data ?? [], $validatedContract);
 
         // Guardar imagen de firma si existe
-        if (isset($validated['imagen_firma'])) {
-            $signatureData = $validated['imagen_firma'];
+        if (isset($validatedContract['imagen_firma'])) {
+            $signatureData = $validatedContract['imagen_firma'];
 
             if (preg_match('/^data:image\/(\w+);base64,/', $signatureData, $type)) {
                 $data = substr($signatureData, strpos($signatureData, ',') + 1);
@@ -88,10 +100,77 @@ class ContractSigningController extends Controller
             }
         }
 
+        // Guardar contrato
         $sale->update([
             'contract_data' => $contractData,
             'contract_signed_date' => now()
         ]);
+
+        // ============ PARTE 2: VALIDAR Y GUARDAR ELITE CLOSER SOCIETY ONBOARDING ============
+
+        // Obtener formulario Elite Closer Society Onboarding
+        $eliteForm = Form::where('slug', 'elite-closer-society-onboarding')
+            ->where('status', 'active')
+            ->with('fields')
+            ->first();
+
+        if ($eliteForm) {
+            // Validación dinámica de campos Elite
+            $eliteRules = [];
+            $eliteFieldNames = [];
+
+            foreach ($eliteForm->fields as $field) {
+                $eliteFieldNames[] = $field->field_name;
+                $fieldRules = [];
+
+                if ($field->is_required) {
+                    $fieldRules[] = 'required';
+                } else {
+                    $fieldRules[] = 'nullable';
+                }
+
+                // Agregar validaciones según tipo de campo
+                switch ($field->field_type) {
+                    case 'email':
+                        $fieldRules[] = 'email';
+                        break;
+                    case 'number':
+                    case 'scale':
+                        $fieldRules[] = 'numeric';
+                        break;
+                    case 'date':
+                        $fieldRules[] = 'date';
+                        break;
+                }
+
+                $eliteRules[$field->field_name] = implode('|', $fieldRules);
+            }
+
+            // Validar solo campos Elite
+            $validatedElite = $request->validate($eliteRules);
+
+            // Crear submission del formulario Elite
+            $submission = FormSubmission::create([
+                'form_id' => $eliteForm->id,
+                'lead_id' => $sale->lead_id, // Relacionar con el lead de la venta
+                'user_id' => null, // El lead no está autenticado
+                'submission_data' => $validatedElite,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'status' => FormSubmission::STATUS_APPROVED, // Auto-aprobado
+                'submitted_at' => now(),
+            ]);
+
+            // Crear log de la submission
+            Log::create([
+                'id_tabla' => $submission->id,
+                'tabla' => 'form_submissions',
+                'tipo_log' => 'elite_onboarding_submitted',
+                'detalle' => 'Formulario Elite Closer Society Onboarding completado durante firma de contrato',
+                'valor_nuevo' => 'approved',
+                'id_usuario' => null, // Sin usuario autenticado
+            ]);
+        }
 
         return redirect()->route('contract.preview', $token)->with('success', 'Contrato completado exitosamente');
     }

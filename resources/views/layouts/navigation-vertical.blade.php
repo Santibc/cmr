@@ -82,6 +82,14 @@
     </div>
 @endif
 
+@if (auth()->user()->getRoleNames()->first() == 'admin' || auth()->user()->getRoleNames()->first() == 'cms')
+    <a href="/forms"
+       class="nav-link mb-2 d-flex align-items-center gap-2 {{ request()->is('forms*') ? 'active' : 'text-dark' }}">
+        <i class="bi bi-ui-checks-grid"></i>
+        <span>Formularios</span>
+    </a>
+@endif
+
         {{-- Agrega más enlaces aquí si lo deseas --}}
     </nav>
 

@@ -15,6 +15,8 @@ use App\Http\Controllers\ContractApprovalController;
 use App\Http\Controllers\UpsellController;
 use App\Http\Controllers\TraigeController;
 use App\Http\Controllers\TraigeCallsController;
+use App\Http\Controllers\FormController;
+use App\Http\Controllers\FormSubmissionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -119,6 +121,34 @@ Route::middleware(['auth', 'verified'])->prefix('upsell')->name('upsell.')->grou
     Route::post('{sale}/pendiente', [UpsellController::class, 'markPendiente'])->name('mark.pendiente');
     Route::post('{sale}/approve', [UpsellController::class, 'approve'])->name('approve');
     Route::get('{sale}/logs', [UpsellController::class, 'getLogs'])->name('logs');
+});
+
+// Rutas para gestión de Formularios Dinámicos (admin y cms)
+Route::middleware(['auth', 'verified'])->prefix('forms')->name('forms.')->group(function () {
+    // CRUD de formularios
+    Route::get('/', [FormController::class, 'index'])->name('index');
+    Route::get('/create', [FormController::class, 'create'])->name('create');
+    Route::post('/', [FormController::class, 'store'])->name('store');
+    Route::get('/{id}/edit', [FormController::class, 'edit'])->name('edit');
+    Route::put('/{id}', [FormController::class, 'update'])->name('update');
+    Route::delete('/{id}', [FormController::class, 'destroy'])->name('destroy');
+    Route::get('/{id}/logs', [FormController::class, 'logs'])->name('logs');
+
+    // Gestión de respuestas
+    Route::get('/{formId}/submissions', [FormSubmissionController::class, 'index'])->name('submissions.index');
+    Route::get('/submissions/{submissionId}/show', [FormSubmissionController::class, 'show'])->name('submissions.show');
+    Route::get('/{formId}/export', [FormSubmissionController::class, 'export'])->name('submissions.export');
+
+    // Renderizar formularios específicos
+    Route::get('/triage-daily/render', [FormSubmissionController::class, 'renderTraigeDaily'])->name('triage-daily.render');
+    Route::get('/closer-daily/render', [FormSubmissionController::class, 'renderCloserDaily'])->name('closer-daily.render');
+
+    // Envío de formularios específicos
+    Route::post('/traige-daily/submit', [FormSubmissionController::class, 'storeTraigeDaily'])->name('traige-daily.submit');
+    Route::post('/closer-daily/submit', [FormSubmissionController::class, 'storeCloserDaily'])->name('closer-daily.submit');
+
+    // Envío genérico de formulario
+    Route::post('/{formSlug}/submit', [FormSubmissionController::class, 'store'])->name('submit');
 });
 
 require __DIR__.'/auth.php';

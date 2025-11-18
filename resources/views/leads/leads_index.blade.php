@@ -92,6 +92,30 @@
         </div>
     </div>
 
+    <!-- Modal para llenar Closer Daily -->
+    <div class="modal fade" id="closerDailyModal" tabindex="-1" aria-labelledby="closerDailyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="closerDailyModalLabel">Formulario: Closer Daily</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="closerDailyForm">
+                        <input type="hidden" id="closerFormLeadId" name="lead_id">
+                        <div id="closerDailyFieldsContainer">
+                            <p class="text-center">Cargando formulario...</p>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="submitCloserDailyForm">Enviar Formulario</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @push('scripts')
 <script>
     $(document).on('click', '.view-logs-btn', function () {
@@ -356,6 +380,203 @@
                     }
                 });
             }
+        });
+
+        // ===================================================
+        // PATRÓN: Formulario Dinámico - Closer Daily
+        // ===================================================
+        let closerDailyFormData = null;
+
+        // Abrir modal y cargar formulario
+        $(document).on('click', '.fill-closer-daily-btn', function() {
+            const leadId = $(this).data('lead-id');
+            const leadName = $(this).data('lead-name');
+
+            $('#closerFormLeadId').val(leadId);
+            $('#closerDailyModalLabel').text(`Formulario: Closer Daily - ${leadName}`);
+            $('#closerDailyModal').modal('show');
+            $('#closerDailyFieldsContainer').html('<p class="text-center">Cargando formulario...</p>');
+
+            // Cargar el formulario del servidor
+            $.get('/forms/closer-daily/render', function(response) {
+                if (response.success) {
+                    closerDailyFormData = response.form;
+                    renderCloserFormFields(response.form.fields);
+                } else {
+                    $('#closerDailyFieldsContainer').html('<p class="text-danger text-center">Error al cargar el formulario.</p>');
+                }
+            }).fail(function() {
+                $('#closerDailyFieldsContainer').html('<p class="text-danger text-center">Error al cargar el formulario.</p>');
+            });
+        });
+
+        // Renderizar campos dinámicamente (usando la misma función que en traige)
+        function renderCloserFormFields(fields) {
+            let html = '';
+
+            fields.forEach(field => {
+                html += `<div class="mb-3">`;
+                html += `<label for="field_${field.field_name}" class="form-label">${field.label}`;
+                if (field.is_required) {
+                    html += ' <span class="text-danger">*</span>';
+                }
+                html += `</label>`;
+
+                // Generar campo según tipo
+                switch(field.field_type) {
+                    case 'text':
+                    case 'email':
+                        html += `<input type="${field.field_type}" class="form-control" id="field_${field.field_name}" name="${field.field_name}"
+                                placeholder="${field.placeholder || ''}" ${field.is_required ? 'required' : ''}>`;
+                        break;
+
+                    case 'textarea':
+                        html += `<textarea class="form-control" id="field_${field.field_name}" name="${field.field_name}" rows="3"
+                                placeholder="${field.placeholder || ''}" ${field.is_required ? 'required' : ''}></textarea>`;
+                        break;
+
+                    case 'number':
+                        html += `<input type="number" class="form-control" id="field_${field.field_name}" name="${field.field_name}"
+                                placeholder="${field.placeholder || ''}" ${field.is_required ? 'required' : ''}>`;
+                        break;
+
+                    case 'date':
+                        html += `<input type="date" class="form-control" id="field_${field.field_name}" name="${field.field_name}"
+                                ${field.is_required ? 'required' : ''}>`;
+                        break;
+
+                    case 'select':
+                        html += `<select class="form-select" id="field_${field.field_name}" name="${field.field_name}" ${field.is_required ? 'required' : ''}>`;
+                        html += `<option value="">Seleccione una opción</option>`;
+                        if (field.options && Array.isArray(field.options)) {
+                            field.options.forEach(opt => {
+                                html += `<option value="${opt}">${opt}</option>`;
+                            });
+                        }
+                        html += `</select>`;
+                        break;
+
+                    case 'radio':
+                        if (field.options && Array.isArray(field.options)) {
+                            field.options.forEach(opt => {
+                                html += `<div class="form-check">
+                                    <input class="form-check-input" type="radio" name="${field.field_name}" id="field_${field.field_name}_${opt}" value="${opt}" ${field.is_required ? 'required' : ''}>
+                                    <label class="form-check-label" for="field_${field.field_name}_${opt}">${opt}</label>
+                                </div>`;
+                            });
+                        }
+                        break;
+
+                    case 'checkbox':
+                        if (field.options && Array.isArray(field.options)) {
+                            field.options.forEach(opt => {
+                                html += `<div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="${field.field_name}[]" id="field_${field.field_name}_${opt}" value="${opt}">
+                                    <label class="form-check-label" for="field_${field.field_name}_${opt}">${opt}</label>
+                                </div>`;
+                            });
+                        }
+                        break;
+
+                    case 'scale':
+                        const min = field.options?.min || 1;
+                        const max = field.options?.max || 10;
+                        html += `<div class="d-flex gap-2 align-items-center">`;
+                        for (let i = min; i <= max; i++) {
+                            html += `<div class="form-check">
+                                <input class="form-check-input" type="radio" name="${field.field_name}" id="field_${field.field_name}_${i}" value="${i}" ${field.is_required ? 'required' : ''}>
+                                <label class="form-check-label" for="field_${field.field_name}_${i}">${i}</label>
+                            </div>`;
+                        }
+                        html += `</div>`;
+                        break;
+
+                    case 'rating':
+                        const stars = field.options?.max || 5;
+                        html += `<div class="star-rating d-flex gap-2">`;
+                        for (let i = 1; i <= stars; i++) {
+                            html += `<span class="star" data-field="${field.field_name}" data-value="${i}" style="font-size: 24px; cursor: pointer; color: #ccc;">★</span>`;
+                        }
+                        html += `</div>`;
+                        html += `<input type="hidden" name="${field.field_name}" id="field_${field.field_name}" ${field.is_required ? 'required' : ''}>`;
+                        break;
+                }
+
+                if (field.help_text) {
+                    html += `<small class="form-text text-muted">${field.help_text}</small>`;
+                }
+
+                html += `</div>`;
+            });
+
+            $('#closerDailyFieldsContainer').html(html);
+
+            // Activar funcionalidad de estrellas
+            $('.star').on('click', function() {
+                const fieldName = $(this).data('field');
+                const value = $(this).data('value');
+                $(`input[name="${fieldName}"]`).val(value);
+
+                // Colorear estrellas
+                $(this).parent().find('.star').each(function(index) {
+                    if (index < value) {
+                        $(this).css('color', '#ffc107');
+                    } else {
+                        $(this).css('color', '#ccc');
+                    }
+                });
+            });
+        }
+
+        // Enviar formulario
+        $('#submitCloserDailyForm').on('click', function() {
+            const formData = new FormData($('#closerDailyForm')[0]);
+
+            // Validar campos requeridos
+            if (!$('#closerDailyForm')[0].checkValidity()) {
+                $('#closerDailyForm')[0].reportValidity();
+                return;
+            }
+
+            // Enviar AJAX
+            $.ajax({
+                url: '/forms/closer-daily/submit',
+                method: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Formulario Enviado',
+                            text: response.message,
+                            showConfirmButton: false,
+                            timer: 1500
+                        }).then(() => {
+                            $('#closerDailyModal').modal('hide');
+                            $('#closerDailyForm')[0].reset();
+                        });
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Error al enviar el formulario.';
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: errorMessage
+                    });
+                    console.error(xhr.responseText);
+                }
+            });
         });
     });
 </script>

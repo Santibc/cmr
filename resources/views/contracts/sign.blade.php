@@ -91,8 +91,192 @@
                                 @endif
                             @endforeach
 
-                            <div class="d-grid">
-                                <button type="submit" class="btn btn-primary">Completar Contrato</button>
+                            {{-- Elite Closer Society Onboarding Form Fields --}}
+                            @if($eliteForm && $eliteForm->fields->isNotEmpty())
+                                <hr class="my-4">
+                                <h5 class="mb-3">{{ $eliteForm->name }}</h5>
+                                @if($eliteForm->description)
+                                    <p class="text-muted small">{{ $eliteForm->description }}</p>
+                                @endif
+
+                                @foreach($eliteForm->fields as $eliteField)
+                                    <div class="mb-3">
+                                        <label class="form-label">
+                                            {{ $eliteField->label }}
+                                            @if($eliteField->is_required)
+                                                <span class="text-danger">*</span>
+                                            @endif
+                                        </label>
+
+                                        @if($eliteField->help_text)
+                                            <small class="form-text text-muted d-block mb-1">{{ $eliteField->help_text }}</small>
+                                        @endif
+
+                                        @switch($eliteField->field_type)
+                                            @case('text')
+                                            @case('email')
+                                                <input
+                                                    type="{{ $eliteField->field_type }}"
+                                                    name="{{ $eliteField->field_name }}"
+                                                    class="form-control"
+                                                    placeholder="{{ $eliteField->placeholder }}"
+                                                    {{ $eliteField->is_required ? 'required' : '' }}
+                                                    value="{{ old($eliteField->field_name) }}"
+                                                >
+                                                @break
+
+                                            @case('number')
+                                                <input
+                                                    type="number"
+                                                    name="{{ $eliteField->field_name }}"
+                                                    class="form-control"
+                                                    placeholder="{{ $eliteField->placeholder }}"
+                                                    {{ $eliteField->is_required ? 'required' : '' }}
+                                                    value="{{ old($eliteField->field_name) }}"
+                                                >
+                                                @break
+
+                                            @case('date')
+                                                <input
+                                                    type="date"
+                                                    name="{{ $eliteField->field_name }}"
+                                                    class="form-control"
+                                                    {{ $eliteField->is_required ? 'required' : '' }}
+                                                    value="{{ old($eliteField->field_name) }}"
+                                                >
+                                                @break
+
+                                            @case('textarea')
+                                                <textarea
+                                                    name="{{ $eliteField->field_name }}"
+                                                    class="form-control"
+                                                    rows="3"
+                                                    placeholder="{{ $eliteField->placeholder }}"
+                                                    {{ $eliteField->is_required ? 'required' : '' }}
+                                                >{{ old($eliteField->field_name) }}</textarea>
+                                                @break
+
+                                            @case('select')
+                                                <select
+                                                    name="{{ $eliteField->field_name }}"
+                                                    class="form-select"
+                                                    {{ $eliteField->is_required ? 'required' : '' }}
+                                                >
+                                                    <option value="">Seleccione una opción</option>
+                                                    @if($eliteField->options)
+                                                        @foreach($eliteField->options as $option)
+                                                            <option value="{{ $option }}" {{ old($eliteField->field_name) == $option ? 'selected' : '' }}>
+                                                                {{ $option }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endif
+                                                </select>
+                                                @break
+
+                                            @case('radio')
+                                                @if($eliteField->options)
+                                                    <div class="d-flex flex-column gap-2">
+                                                        @foreach($eliteField->options as $option)
+                                                            <div class="form-check">
+                                                                <input
+                                                                    class="form-check-input"
+                                                                    type="radio"
+                                                                    name="{{ $eliteField->field_name }}"
+                                                                    id="{{ $eliteField->field_name }}_{{ $loop->index }}"
+                                                                    value="{{ $option }}"
+                                                                    {{ $eliteField->is_required ? 'required' : '' }}
+                                                                    {{ old($eliteField->field_name) == $option ? 'checked' : '' }}
+                                                                >
+                                                                <label class="form-check-label" for="{{ $eliteField->field_name }}_{{ $loop->index }}">
+                                                                    {{ $option }}
+                                                                </label>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                                @break
+
+                                            @case('checkbox')
+                                                @if($eliteField->options)
+                                                    <div class="d-flex flex-column gap-2">
+                                                        @foreach($eliteField->options as $option)
+                                                            <div class="form-check">
+                                                                <input
+                                                                    class="form-check-input"
+                                                                    type="checkbox"
+                                                                    name="{{ $eliteField->field_name }}[]"
+                                                                    id="{{ $eliteField->field_name }}_{{ $loop->index }}"
+                                                                    value="{{ $option }}"
+                                                                    {{ is_array(old($eliteField->field_name)) && in_array($option, old($eliteField->field_name)) ? 'checked' : '' }}
+                                                                >
+                                                                <label class="form-check-label" for="{{ $eliteField->field_name }}_{{ $loop->index }}">
+                                                                    {{ $option }}
+                                                                </label>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                                @break
+
+                                            @case('scale')
+                                                @php
+                                                    $min = $eliteField->options['min'] ?? 1;
+                                                    $max = $eliteField->options['max'] ?? 10;
+                                                @endphp
+                                                <div class="d-flex gap-2 align-items-center flex-wrap">
+                                                    @for($i = $min; $i <= $max; $i++)
+                                                        <div class="form-check">
+                                                            <input
+                                                                class="form-check-input"
+                                                                type="radio"
+                                                                name="{{ $eliteField->field_name }}"
+                                                                id="{{ $eliteField->field_name }}_{{ $i }}"
+                                                                value="{{ $i }}"
+                                                                {{ $eliteField->is_required ? 'required' : '' }}
+                                                                {{ old($eliteField->field_name) == $i ? 'checked' : '' }}
+                                                            >
+                                                            <label class="form-check-label" for="{{ $eliteField->field_name }}_{{ $i }}">
+                                                                {{ $i }}
+                                                            </label>
+                                                        </div>
+                                                    @endfor
+                                                </div>
+                                                @break
+
+                                            @case('rating')
+                                                @php
+                                                    $maxRating = $eliteField->options['max'] ?? 5;
+                                                @endphp
+                                                <div class="d-flex gap-2">
+                                                    @for($i = 1; $i <= $maxRating; $i++)
+                                                        <div class="form-check">
+                                                            <input
+                                                                class="form-check-input"
+                                                                type="radio"
+                                                                name="{{ $eliteField->field_name }}"
+                                                                id="{{ $eliteField->field_name }}_star_{{ $i }}"
+                                                                value="{{ $i }}"
+                                                                {{ $eliteField->is_required ? 'required' : '' }}
+                                                                {{ old($eliteField->field_name) == $i ? 'checked' : '' }}
+                                                            >
+                                                            <label class="form-check-label" for="{{ $eliteField->field_name }}_star_{{ $i }}">
+                                                                ⭐ {{ $i }}
+                                                            </label>
+                                                        </div>
+                                                    @endfor
+                                                </div>
+                                                @break
+                                        @endswitch
+
+                                        @error($eliteField->field_name)
+                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                @endforeach
+                            @endif
+
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">Completar Contrato</button>
                             </div>
                         </form>
                     </div>

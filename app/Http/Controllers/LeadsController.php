@@ -87,11 +87,19 @@ class LeadsController extends Controller
                     $llamadasUrl = route('llamadas', ['lead_id' => $lead->id]);
                     $buttons = '<div class="d-flex justify-content-start  gap-1">';
                     $buttons .= '<a href="' . $llamadasUrl . '" class="btn btn-outline-secondary btn-sm" title="Ver llamadas"><i class="bi bi-telephone"></i></a>';
-                    $buttons .= '<button type="button" class="btn btn-outline-info btn-sm view-logs-btn" 
+                    $buttons .= '<button type="button" class="btn btn-outline-info btn-sm view-logs-btn"
                         data-lead-id="' . $lead->id . '" title="Ver Historial de Cambios">
                         <i class="bi bi-clock-history"></i>
-                    </button>';     
-                    
+                    </button>';
+
+                    // Botón de llenar Closer Daily
+                    $buttons .= '<button type="button" class="btn btn-outline-warning btn-sm fill-closer-daily-btn"
+                        data-lead-id="' . $lead->id . '"
+                        data-lead-name="' . e($lead->nombre) . '"
+                        title="Llenar Closer Daily">
+                        <i class="bi bi-file-text"></i>
+                    </button>';
+
                     if ($lead->sale) {
                         // Ya tiene una venta registrada: botón para ver modal
                         $buttons .= '<button type="button" class="btn btn-outline-primary btn-sm view-sale-btn"
