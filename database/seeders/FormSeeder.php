@@ -546,11 +546,107 @@ class FormSeeder extends Seeder
             $this->command->info('ℹ️  Formulario VENTA CERRADA ya existe con ' . $ventaCerrada->fields()->count() . ' campos');
         }
 
+        // ============================================================
+        // FORMULARIO 5: FULFILLMENT DAILY
+        // ============================================================
+        $this->command->info('');
+        $this->command->info('📋 Creando formulario: FULFILLMENT DAILY...');
+
+        $fulfillmentDaily = Form::firstOrCreate(
+            ['slug' => 'fulfillment-daily'],
+            [
+                'name' => 'FULFILLMENT DAILY',
+                'description' => 'Formulario diario de seguimiento de fulfillment',
+                'status' => 'active',
+                'module' => 'fulfillment',
+                'user_id' => $admin->id,
+            ]
+        );
+
+        // Campos del formulario Fulfillment Daily
+        $fulfillmentFields = [
+            [
+                'label' => 'FECHA',
+                'field_type' => 'date',
+                'field_name' => 'fecha',
+                'placeholder' => '',
+                'is_required' => true,
+                'order' => 0,
+            ],
+            [
+                'label' => 'NOMBRE DEL RESPONSABLE',
+                'field_type' => 'text',
+                'field_name' => 'nombre-responsable',
+                'placeholder' => 'Tu respuesta',
+                'is_required' => true,
+                'order' => 1,
+            ],
+            [
+                'label' => 'CANTIDAD DE CLIENTES ONBORDEADOS',
+                'field_type' => 'scale',
+                'field_name' => 'clientes-onbordeados',
+                'is_required' => true,
+                'options' => ['min' => 0, 'max' => 10],
+                'order' => 2,
+            ],
+            [
+                'label' => 'CANTIDAD DE ALUMNOS CON DIFICULTADES DETECTADAS',
+                'field_type' => 'scale',
+                'field_name' => 'alumnos-con-dificultades',
+                'is_required' => true,
+                'options' => ['min' => 0, 'max' => 5],
+                'order' => 3,
+            ],
+            [
+                'label' => 'CASOS CRITICOS A ESCALAR',
+                'field_type' => 'textarea',
+                'field_name' => 'casos-criticos',
+                'placeholder' => 'Tu respuesta',
+                'is_required' => true,
+                'order' => 4,
+            ],
+            [
+                'label' => 'SATIFACCION DE ALUMNOS',
+                'field_type' => 'rating',
+                'field_name' => 'satisfaccion-alumnos',
+                'is_required' => true,
+                'options' => ['max' => 5],
+                'order' => 5,
+            ],
+            [
+                'label' => 'FEEDBACK RECIBIDO DE ALUMNOS',
+                'field_type' => 'textarea',
+                'field_name' => 'feedback-alumnos',
+                'placeholder' => 'Tu respuesta',
+                'is_required' => true,
+                'order' => 6,
+            ],
+            [
+                'label' => 'OBSERVACIONES DEL DIA',
+                'field_type' => 'textarea',
+                'field_name' => 'observaciones-dia',
+                'placeholder' => 'Tu respuesta',
+                'is_required' => true,
+                'order' => 7,
+            ],
+        ];
+
+        // Solo crear campos si el formulario no tenía campos previamente
+        if ($fulfillmentDaily->fields()->count() === 0) {
+            foreach ($fulfillmentFields as $fieldData) {
+                FormField::create(array_merge($fieldData, ['form_id' => $fulfillmentDaily->id]));
+            }
+            $this->command->info('✅ Formulario FULFILLMENT DAILY creado con ' . count($fulfillmentFields) . ' campos');
+        } else {
+            $this->command->info('ℹ️  Formulario FULFILLMENT DAILY ya existe con ' . $fulfillmentDaily->fields()->count() . ' campos');
+        }
+
         $this->command->info('');
         $this->command->info('🎉 Seeder de formularios completado exitosamente!');
         $this->command->info('   - TRIAGE DAILY (traige module): ' . count($triageFields) . ' campos');
         $this->command->info('   - CLOSER DAILY (leads module): ' . count($closerFields) . ' campos');
         $this->command->info('   - ELITE CLOSER SOCIETY ONBOARDING (sin módulo): ' . count($eliteFields) . ' campos');
         $this->command->info('   - FORMULARIO VENTA CERRADA (sin módulo): ' . count($ventaCerradaFields) . ' campos');
+        $this->command->info('   - FULFILLMENT DAILY (fulfillment module): ' . count($fulfillmentFields) . ' campos');
     }
 }

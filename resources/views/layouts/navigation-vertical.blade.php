@@ -20,12 +20,6 @@
     <i class="bi bi-person-lines-fill"></i>
     <span>Usuarios</span>
 </a>
-
-<a href="/upsell"
-   class="nav-link mb-2 d-flex align-items-center gap-2 {{ request()->is('upsell*') ? 'active' : 'text-dark' }}">
-    <i class="bi bi-arrow-up-circle"></i>
-    <span>Upsells</span>
-</a>
 @endif
 @if (auth()->user()->getRoleNames()->first() == 'admin' || auth()->user()->getRoleNames()->first() == 'traige')
     <a href="/traige"
@@ -49,21 +43,32 @@
 @endif
 
 @if (auth()->user()->getRoleNames()->first() == 'admin' || auth()->user()->getRoleNames()->first() == 'cms')
-    <!-- Onboarding Dropdown -->
+    <!-- Operaciones Dropdown -->
     <div class="nav-item dropdown mb-2">
-        <a class="nav-link d-flex align-items-center gap-2 dropdown-toggle {{ request()->is('onboarding*') ? 'active' : 'text-dark' }}" 
+        <a class="nav-link d-flex align-items-center gap-2 dropdown-toggle {{ request()->is('onboarding/dashboard*') ? 'active' : 'text-dark' }}"
            href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-headset"></i>
-            <span>Onboarding</span>
+            <i class="bi bi-bar-chart-line"></i>
+            <span>Operaciones</span>
         </a>
         <ul class="dropdown-menu">
             <li>
-                <a class="dropdown-item d-flex align-items-center gap-2 {{ request()->is('onboarding/dashboard*') ? 'active' : '' }}" 
+                <a class="dropdown-item d-flex align-items-center gap-2 {{ request()->is('onboarding/dashboard*') ? 'active' : '' }}"
                    href="/onboarding/dashboard">
                     <i class="bi bi-graph-up-arrow"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
+        </ul>
+    </div>
+
+    <!-- Fulfillment Dropdown -->
+    <div class="nav-item dropdown mb-2">
+        <a class="nav-link d-flex align-items-center gap-2 dropdown-toggle {{ request()->is('onboarding*') && !request()->is('onboarding/dashboard*') || request()->is('upsell*') || request()->is('fulfillment*') ? 'active' : 'text-dark' }}"
+           href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-headset"></i>
+            <span>Fulfillment</span>
+        </a>
+        <ul class="dropdown-menu">
             <li>
                 <a class="dropdown-item d-flex align-items-center gap-2 {{ request()->is('onboarding/leads*') ? 'active' : '' }}"
                    href="/onboarding/leads">
@@ -76,6 +81,21 @@
                    href="/contracts/approval">
                     <i class="bi bi-file-earmark-check"></i>
                     <span>Aprobación de Contratos</span>
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 {{ request()->is('upsell*') ? 'active' : '' }}"
+                   href="/upsell">
+                    <i class="bi bi-arrow-up-circle"></i>
+                    <span>Upsells</span>
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2 {{ request()->is('fulfillment/form*') ? 'active' : '' }}"
+                   href="/fulfillment/form">
+                    <i class="bi bi-clipboard-check"></i>
+                    <span>FULFILLMENT DAILY</span>
                 </a>
             </li>
         </ul>

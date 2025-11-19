@@ -17,6 +17,7 @@ use App\Http\Controllers\TraigeController;
 use App\Http\Controllers\TraigeCallsController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\FormSubmissionController;
+use App\Http\Controllers\FulfillmentFormController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -149,6 +150,16 @@ Route::middleware(['auth', 'verified'])->prefix('forms')->name('forms.')->group(
 
     // Envío genérico de formulario
     Route::post('/{formSlug}/submit', [FormSubmissionController::class, 'store'])->name('submit');
+});
+
+// ============================================================
+// FULFILLMENT FORM ROUTES
+// ============================================================
+Route::middleware('auth')->prefix('fulfillment')->name('fulfillment.')->group(function () {
+    Route::get('/form', [FulfillmentFormController::class, 'index'])->name('form.index');
+    Route::get('/form/submissions', [FulfillmentFormController::class, 'getSubmissions'])->name('form.submissions');
+    Route::post('/form/store', [FulfillmentFormController::class, 'store'])->name('form.store');
+    Route::get('/form/submission/{submissionId}', [FulfillmentFormController::class, 'show'])->name('form.submission.show');
 });
 
 require __DIR__.'/auth.php';
