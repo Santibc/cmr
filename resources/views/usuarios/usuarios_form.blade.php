@@ -78,7 +78,11 @@
                                 @foreach(\Spatie\Permission\Models\Role::all() as $role)
                                     <option value="{{ $role->name }}" 
                                         {{ old('role', $user->roles->first()?->name) == $role->name ? 'selected' : '' }}>
-                                        {{ ucfirst($role->name) }}
+                                        @if($role->name=='traige')
+                                            Triage
+                                        @else
+                                            {{ ucfirst($role->name) }}
+                                        @endif
                                     </option>
                                 @endforeach
                             </select>
