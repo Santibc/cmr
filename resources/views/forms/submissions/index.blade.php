@@ -13,12 +13,69 @@
                             <p class="text-muted">{{ $form->description }}</p>
                         </div>
                         <div class="d-flex gap-2">
-                            <a href="{{ route('forms.submissions.export', $form->id) }}" class="btn btn-success">
-                                <i class="bi bi-file-earmark-spreadsheet"></i> Exportar CSV
+                            <a href="{{ route('forms.submissions.charts', $form->id) }}" class="btn btn-primary">
+                                <i class="bi bi-bar-chart-fill"></i> Ver Graficas
                             </a>
                             <a href="{{ route('forms.index') }}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> Volver
                             </a>
+                        </div>
+                    </div>
+
+                    <!-- FILTROS -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0"><i class="bi bi-funnel"></i> Filtros</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="filterDateFrom" class="form-label">Fecha desde</label>
+                                    <input type="date" class="form-control" id="filterDateFrom">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="filterDateTo" class="form-label">Fecha hasta</label>
+                                    <input type="date" class="form-control" id="filterDateTo">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="filterStatus" class="form-label">Estado</label>
+                                    <select class="form-select" id="filterStatus">
+                                        <option value="">Todos</option>
+                                        @foreach(App\Models\FormSubmission::getStatuses() as $key => $label)
+                                            <option value="{{ $key }}">{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="filterUser" class="form-label">Enviado por</label>
+                                    <select class="form-select" id="filterUser">
+                                        <option value="">Todos</option>
+                                        @foreach($users as $user)
+                                            <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12 d-flex justify-content-between flex-wrap gap-2">
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-primary" id="applyFilters">
+                                            <i class="bi bi-search"></i> Aplicar Filtros
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" id="clearFilters">
+                                            <i class="bi bi-x-circle"></i> Limpiar
+                                        </button>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-success" id="exportCsvBtn">
+                                            <i class="bi bi-file-earmark-csv"></i> Exportar CSV
+                                        </button>
+                                        <button type="button" class="btn btn-info text-white" id="exportExcelBtn">
+                                            <i class="bi bi-file-earmark-excel"></i> Exportar Excel Completo
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -76,14 +133,22 @@
 
     <script>
         $(document).ready(function() {
-            // DataTables
+            // DataTables with server-side processing and filters
             const table = $('#submissions-table').DataTable({
                 processing: true,
                 serverSide: true,
                 responsive: true,
                 scrollX: true,
                 autoWidth: false,
-                ajax: "{{ route('forms.submissions.index', $form->id) }}",
+                ajax: {
+                    url: "{{ route('forms.submissions.index', $form->id) }}",
+                    data: function(d) {
+                        d.date_from = $('#filterDateFrom').val();
+                        d.date_to = $('#filterDateTo').val();
+                        d.status = $('#filterStatus').val();
+                        d.user_id = $('#filterUser').val();
+                    }
+                },
                 columns: [
                     { data: 'action', name: 'action', orderable: false, searchable: false },
                     { data: 'id', name: 'id' },
@@ -98,7 +163,53 @@
                 order: [[5, 'desc']]
             });
 
-            // Ver detalles de la respuesta
+            // Apply filters
+            $('#applyFilters').on('click', function() {
+                table.ajax.reload();
+            });
+
+            // Clear filters
+            $('#clearFilters').on('click', function() {
+                $('#filterDateFrom').val('');
+                $('#filterDateTo').val('');
+                $('#filterStatus').val('');
+                $('#filterUser').val('');
+                table.ajax.reload();
+            });
+
+            // Build query string from current filters
+            function getFilterQueryString() {
+                const params = new URLSearchParams();
+                const dateFrom = $('#filterDateFrom').val();
+                const dateTo = $('#filterDateTo').val();
+                const status = $('#filterStatus').val();
+                const userId = $('#filterUser').val();
+
+                if (dateFrom) params.append('date_from', dateFrom);
+                if (dateTo) params.append('date_to', dateTo);
+                if (status) params.append('status', status);
+                if (userId) params.append('user_id', userId);
+
+                return params.toString();
+            }
+
+            // Export CSV with filters
+            $('#exportCsvBtn').on('click', function() {
+                const queryString = getFilterQueryString();
+                const url = "{{ route('forms.submissions.export', $form->id) }}" +
+                            (queryString ? '?' + queryString : '');
+                window.location.href = url;
+            });
+
+            // Export Excel with filters
+            $('#exportExcelBtn').on('click', function() {
+                const queryString = getFilterQueryString();
+                const url = "{{ route('forms.submissions.export.excel', $form->id) }}" +
+                            (queryString ? '?' + queryString : '');
+                window.location.href = url;
+            });
+
+            // View submission details
             $(document).on('click', '.view-submission-btn', function() {
                 const submissionId = $(this).data('submission-id');
 
@@ -118,7 +229,7 @@
                                 <p><strong>Estado:</strong> <span class="badge bg-info">${submission.status}</span></p>
                             </div>
                             <hr>
-                            <h6 class="mb-3">Respuestas:</h6>
+                            <h6 class="mb-3">Detalles de la Respuesta:</h6>
                             <table class="table table-bordered table-sm">
                                 <thead class="table-light">
                                     <tr>

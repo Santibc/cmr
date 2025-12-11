@@ -5,14 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Form;
 use App\Models\FormSubmission;
 use App\Models\Log;
+use App\Services\Export\FormExportService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 
 class FormSubmissionController extends Controller
 {
-    public function __construct()
+    protected FormExportService $exportService;
+
+    public function __construct(FormExportService $exportService)
     {
+        $this->exportService = $exportService;
+
         // PATRÓN: Middleware de permisos
         $this->middleware(function ($request, $next) {
             $userRole = auth()->user()->getRoleNames()->first();
@@ -30,11 +35,28 @@ class FormSubmissionController extends Controller
     {
         $form = Form::with('fields')->findOrFail($formId);
 
+        // Get users who have submitted to this form for filter dropdown
+        $users = $this->exportService->getSubmitterUsers($formId);
+
         // PATRÓN: DataTables server-side processing
         if ($request->ajax()) {
             $query = FormSubmission::where('form_id', $formId)
                 ->with(['user', 'lead'])
                 ->orderByDesc('submitted_at');
+
+            // Apply filters from request
+            if ($request->filled('date_from')) {
+                $query->whereDate('submitted_at', '>=', $request->date_from);
+            }
+            if ($request->filled('date_to')) {
+                $query->whereDate('submitted_at', '<=', $request->date_to);
+            }
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+            if ($request->filled('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
 
             return DataTables::of($query)
                 ->addColumn('submitted_by', function ($submission) {
@@ -70,7 +92,7 @@ class FormSubmissionController extends Controller
                 ->make(true);
         }
 
-        return view('forms.submissions.index', compact('form'));
+        return view('forms.submissions.index', compact('form', 'users'));
     }
 
     /**
@@ -433,53 +455,48 @@ class FormSubmissionController extends Controller
     }
 
     /**
-     * Export submissions to CSV.
+     * Export submissions to CSV with filters applied.
      */
-    public function export($formId)
+    public function export(Request $request, $formId)
     {
-        $form = Form::with(['fields', 'submissions'])->findOrFail($formId);
+        $filters = $request->only(['date_from', 'date_to', 'status', 'user_id']);
+        return $this->exportService->exportToCsv($formId, $filters);
+    }
 
-        $filename = 'respuestas_' . \Str::slug($form->name) . '_' . date('Y-m-d') . '.csv';
+    /**
+     * Export complete submissions to Excel with ALL historical fields.
+     */
+    public function exportExcel(Request $request, $formId)
+    {
+        $filters = $request->only(['date_from', 'date_to', 'status', 'user_id']);
+        return $this->exportService->exportToExcel($formId, $filters);
+    }
 
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
+    /**
+     * Display charts view for form submissions.
+     * Shows dynamic charts based on field types.
+     */
+    public function charts(Request $request, $formId)
+    {
+        $form = Form::with('fields')->findOrFail($formId);
+        $users = $this->exportService->getSubmitterUsers($formId);
 
-        $callback = function() use ($form) {
-            $file = fopen('php://output', 'w');
+        // Get filters
+        $filters = $request->only(['date_from', 'date_to', 'status', 'user_id']);
 
-            // Headers del CSV
-            $csvHeaders = ['ID', 'Enviado por', 'Lead relacionado', 'Fecha de envío', 'Estado'];
-            foreach ($form->fields as $field) {
-                $csvHeaders[] = $field->label;
-            }
-            fputcsv($file, $csvHeaders);
+        // Get chart data
+        $chartsData = $this->exportService->getChartsData($formId, $filters);
+        $totalSubmissions = $this->exportService->getFilteredSubmissions($formId, $filters)->count();
 
-            // Datos
-            foreach ($form->submissions as $submission) {
-                $row = [
-                    $submission->id,
-                    $submission->user ? $submission->user->name : 'N/A',
-                    $submission->lead ? $submission->lead->nombre : 'N/A',
-                    $submission->submitted_at ? $submission->submitted_at->format('Y-m-d H:i') : 'N/A',
-                    FormSubmission::getStatuses()[$submission->status] ?? $submission->status
-                ];
+        // If AJAX request, return only JSON
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'chartsData' => $chartsData,
+                'totalSubmissions' => $totalSubmissions
+            ]);
+        }
 
-                foreach ($form->fields as $field) {
-                    $value = $submission->getFieldValue($field->field_name, '');
-                    if (is_array($value)) {
-                        $value = implode(', ', $value);
-                    }
-                    $row[] = $value;
-                }
-
-                fputcsv($file, $row);
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        return view('forms.submissions.charts', compact('form', 'users', 'chartsData', 'totalSubmissions', 'filters'));
     }
 }

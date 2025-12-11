@@ -139,6 +139,8 @@ Route::middleware(['auth', 'verified'])->prefix('forms')->name('forms.')->group(
     Route::get('/{formId}/submissions', [FormSubmissionController::class, 'index'])->name('submissions.index');
     Route::get('/submissions/{submissionId}/show', [FormSubmissionController::class, 'show'])->name('submissions.show');
     Route::get('/{formId}/export', [FormSubmissionController::class, 'export'])->name('submissions.export');
+    Route::get('/{formId}/export-excel', [FormSubmissionController::class, 'exportExcel'])->name('submissions.export.excel');
+    Route::get('/{formId}/charts', [FormSubmissionController::class, 'charts'])->name('submissions.charts');
 
     // Renderizar formularios específicos
     Route::get('/triage-daily/render', [FormSubmissionController::class, 'renderTraigeDaily'])->name('triage-daily.render');

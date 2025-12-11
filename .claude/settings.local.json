@@ -9,7 +9,8 @@
       "Bash(php -l:*)",
       "Bash(php fix_elite_labels.php:*)",
       "Bash(composer require:*)",
-      "Bash(composer remove:*)"
+      "Bash(composer remove:*)",
+      "Bash(php -r:*)"
     ],
     "deny": [],
     "ask": []
